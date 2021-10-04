@@ -1,0 +1,6 @@
+# NEVER include the environment variable file
+.env
+
+prisma/migrations
+node_modules
+package-lock.json
