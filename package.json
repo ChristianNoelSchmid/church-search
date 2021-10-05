@@ -1,5 +1,5 @@
 {
-  "name": "church_searching",
+  "name": "church_search",
   "version": "0.0.1",
   "description": "A webapp that allows churches to identify themselves and display their values to users who are searching for a new church-family.",
   "main": "app.ts",

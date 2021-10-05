@@ -7,11 +7,85 @@ generator client {
     provider = "prisma-client-js"
 }
 
+// The type of a single account
+enum UserType {
+    Church
+    Individual
+}
+
+// A user account, which holds all unique data to a particular user
 model User {
-    id            String  @id @default(uuid())
-    username      String  @unique
-    email         String  @unique
+    id            String   @id @default(uuid()) @db.VarChar(255)
+    email         String   @unique
     password_hash String
-    first_name    String?
-    family_name   String?
+    user_type     UserType
+
+    // If the user is of UserType.Church, church will correspond to the given church
+    church_id String? @db.VarChar(255)
+    church    Church? @relation(fields: [church_id], references: [id])
+
+    // If the user is of UserType.Individual, indiv will correspond to the given church
+    indiv_id String?     @db.VarChar(255)
+    indiv    Individual? @relation(fields: [indiv_id], references: [id])
+
+    // The User's quizzes and reviews
+    Quiz   Quiz[]
+    Review Review[]
+}
+
+// Stores information related to a church.
+// Attached to account when account's type is Church
+model Church {
+    id      String  @default(uuid()) @db.VarChar(255)
+    name    String
+    address String?
+
+    user_id String @db.VarChar(255)
+    user    User?
+
+    @@id([id, user_id])
+}
+
+// Stores information related to an individual.
+// Attached to account when account's type is Individual
+model Individual {
+    id         String @default(uuid()) @db.VarChar(255)
+    first_name String
+    last_name  String
+
+    user_id String
+    user    User?
+
+    @@id([id, user_id])
+}
+
+model Quiz {
+    id      String @id @default(uuid()) @db.VarChar(255)
+    answers String @db.VarChar(255)
+
+    user_id String @db.VarChar(255)
+    user    User   @relation(fields: [user_id], references: [id])
+}
+
+model Review {
+    id String @id @default(uuid()) @db.VarChar(255)
+
+    user_id String? @db.VarChar(255)
+    user    User?   @relation(fields: [user_id], references: [id])
+
+    is_anonymous Boolean @default(false)
+
+    quiz_id  Int
+    answers  String    @db.VarChar(255)
+    comments Comment[]
+}
+
+model Comment {
+    id String @id @default(uuid()) @db.VarChar(255)
+
+    review_id String @db.VarChar(255)
+    review    Review @relation(fields: [review_id], references: [id])
+
+    answer_index Int
+    comment      String @db.VarChar(255)
 }
