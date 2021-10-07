@@ -4,7 +4,7 @@
   "description": "A webapp that allows churches to identify themselves and display their values to users who are searching for a new church-family.",
   "main": "app.ts",
   "scripts": {
-    "start": "ts-node-dev ./app.ts",
+    "start": "ts-node-dev ./bin/www.ts",
     "test": "test"
   },
   "keywords": [
@@ -18,18 +18,25 @@
   "author": "Christian Schmid",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/debug": "^4.1.7",
     "@types/express": "^4.17.13",
     "@types/http-errors": "^1.8.1",
+    "@types/jsonwebtoken": "^8.5.5",
     "@types/morgan": "^1.9.3",
     "@types/node": "^16.10.2",
-    "prisma": "^3.1.1",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.4.3"
   },
   "dependencies": {
-    "@prisma/client": "^3.1.1",
+    "@prisma/client": "^3.2.0",
+    "bcrypt": "^5.0.1",
+    "crypto": "^1.0.1",
     "express": "^4.17.1",
+    "express-validator": "^6.12.2",
     "http-errors": "^1.8.0",
-    "morgan": "^1.10.0"
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.10.0",
+    "prisma": "^3.1.1"
   }
 }

@@ -1,11 +1,9 @@
 import express from "express";
 
 const indexRouter = express.Router();
-indexRouter.get('/', (_req, res) => {
-    res.json({ 
-        msg: "Hello, index!",
-        value: 64,
-    });
-});
+
+indexRouter.get('/', (req, res) => 
+    res.status(200).json({ 'msg': 'Hello, world!' })
+);
 
 export { indexRouter };

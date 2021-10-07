@@ -3,6 +3,7 @@ import createError from 'http-errors';
 import logger from "morgan";
 
 import { indexRouter } from './routes/index';
+import { userRouter } from './routes/users';
 
 const app: Application = express();
 const port = 3000;
@@ -14,28 +15,21 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routing Middleware
 app.use('/', indexRouter);
+app.use('/users', userRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function(_req: Request, res: Response, next: any) {
     next(createError(404));
 });
 
 // error handler
-app.use((err: any, req: any, res: any, next: any) => {
+app.use(function(err: any, req: Request, res: Response) {
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
   
     // render the error page
-    res.status(err.status || 500);
-    res.render('error');
+    res.status(err.status || 500).json({msg: "an error has occurred"});
 });
-  
-// Begin listening...
-try {
-    app.listen(port, () => {
-        console.log(`Connected successfully on port ${port}`);
-    });
-} catch (error: any) {
-    console.error(`Error occured: ${error.message}`);
-}
+
+export { app }
