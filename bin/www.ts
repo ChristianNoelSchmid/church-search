@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-import { app } from '../app';
+import { app } from '../src/app';
 import Debug from 'debug';
 import http from 'http';
 

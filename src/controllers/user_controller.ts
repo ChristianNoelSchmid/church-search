@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { prisma } from '../prisma/client';
+import { prisma } from '../client';
 import jwt from 'jsonwebtoken'
 import { RefreshToken, User } from '@prisma/client';
+import { TokenKeyNotDefinedError } from '../middleware/auth';
 
 // Create a new Individual User
 const createIndivUser = async (req: Request, res: Response, next: any) => {
@@ -30,9 +31,12 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
             },
             include: { indiv: true, },
         });
+
+        const [accessToken, refreshToken] = [_generateAccessToken(user.id), (await _createRefreshToken(user, null, req.ip)).token];
+        res.cookie("refreshToken", refreshToken, { httpOnly: true });
         
         // Return a requery of the user with the individual info included
-        res.status(201).json(user);
+        res.status(201).json({ user, accessToken });
     } catch(error) { next(error); }
 }
 
@@ -62,9 +66,10 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
         });
 
         const [accessToken, refreshToken] = [_generateAccessToken(user.id), (await _createRefreshToken(user, null, req.ip)).token];
+        res.cookie("refreshToken", refreshToken, { httpOnly: true });
 
         // Return a requery of the user with the church info included
-        res.status(201).json({ user, accessToken, refreshToken });
+        res.status(201).json({ user, accessToken });
     } catch (error) { next(error); }
 }
 
@@ -121,7 +126,7 @@ const _hashPassword = async (password: string): Promise<string> => {
 
 const _generateAccessToken = (user_id: string): string => {
     if(process.env.TOKEN_KEY == undefined)
-        throw "TOKEN_KEY env value not set!";
+        throw new TokenKeyNotDefinedError();
 
     const token = jwt.sign(
         { user_id }, process.env.TOKEN_KEY, {

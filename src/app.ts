@@ -1,6 +1,8 @@
 import express, { Application, Request, Response } from "express";
 import createError from 'http-errors';
 import logger from "morgan";
+import cookieParser from 'cookie-parser';
+import { verifyToken } from './middleware/auth';
 
 import { indexRouter } from './routes/index';
 import { userRouter } from './routes/users';
@@ -12,6 +14,8 @@ const port = 3000;
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(verifyToken);
 
 // Routing Middleware
 app.use('/', indexRouter);
