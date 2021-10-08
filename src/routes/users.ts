@@ -1,11 +1,12 @@
 import express from "express";
 
 import { body, validationResult } from 'express-validator';
-import { createChurchUser, createIndivUser, updateChurchUser, updateIndivUser } from "../controllers/user_controller";
+import { login, createChurchUser, createIndivUser, refreshAccessToken, logout, updateChurchUser, updateIndivUser } from "../controllers/user_controller";
 import { Request, Response } from 'express';
 
 const userRouter = express.Router();
 
+// POST create an Individual User account
 userRouter.post('/create/indiv',
 
     body('user.email').isEmail(),
@@ -25,6 +26,7 @@ userRouter.post('/create/indiv',
     }
 );
 
+// POST create a Church User account
 userRouter.post('/create/church',
     
     body('user.email').isEmail(),
@@ -44,9 +46,9 @@ userRouter.post('/create/church',
     }
 );
 
+// PUT update an Individual User account
 userRouter.put('/update/indiv',
 
-    body('user.id').isString(), // TODO - add authorization
     body('user.email').isEmail(),
     body('indiv.firstName').isString(),
     body('indiv.lastName').isString(),
@@ -57,14 +59,14 @@ userRouter.put('/update/indiv',
             res.status(400).json({ errors: errors });
         }
 
-        updateIndivUser(req.body.user.id, req, res, next);
+        updateIndivUser(req, res, next);
     }
 
 );
 
-userRouter.post('/update/church',
+// PUT update a Church User account
+userRouter.put('/update/church',
     
-    body('user.id').isString(), // TODO - add authorization
     body('user.email').isEmail(),
     body('church.name').isString(),
     body('church.address').isString(),
@@ -76,8 +78,34 @@ userRouter.post('/update/church',
             res.status(400).json({ errors: errors });
         }
 
-        updateChurchUser(req.body.user.id, req, res, next);
+        updateChurchUser(req, res, next);
     }
 
+);
+
+// POST requests a new access and refresh token, with
+// refresh token cookie
+userRouter.post('/refresh',
+    async (req: Request, res: Response, next) => {
+        await refreshAccessToken(req, res, next);
+    }
+);
+
+// POST logs into the site
+userRouter.post('/login',
+
+    body('email').isEmail(),
+    body('password').isString(),
+
+    async(req: Request, res: Response, next) => {
+        await login(req, res, next);
+    }
+);
+
+// PUT logs out of the site
+userRouter.put('/logout',
+    async (req: Request, res: Response, next) => {
+        await logout(req, res, next);
+    }
 );
 export { userRouter };

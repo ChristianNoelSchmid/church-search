@@ -6,7 +6,11 @@ import jwt from 'jsonwebtoken'
 import { RefreshToken, User } from '@prisma/client';
 import { TokenKeyNotDefinedError } from '../middleware/auth';
 
-// Create a new Individual User
+// #region Exported Functions
+/**
+ * Creates an Individual User, using the Request body json
+ * @returns A json result of the new User, with it's Individual info
+ */
 const createIndivUser = async (req: Request, res: Response, next: any) => {
     try {
         // If the User already exists return BadRequest
@@ -32,14 +36,15 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
             include: { indiv: true, },
         });
 
-        const [accessToken, refreshToken] = [_generateAccessToken(user.id), (await _createRefreshToken(user, null, req.ip)).token];
-        res.cookie("refreshToken", refreshToken, { httpOnly: true });
-        
         // Return a requery of the user with the individual info included
-        res.status(201).json({ user, accessToken });
+        res.status(201).json({ user });
     } catch(error) { next(error); }
 }
 
+/**
+ * Creates a Church User, using the Request body json
+ * @returns A json result of the new User, with it's Church info
+ */
 const createChurchUser = async (req: Request, res: Response, next: any) => {
     try {
         // If the User already exists return BadRequest
@@ -65,19 +70,19 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
             include: { church: true, },
         });
 
-        const [accessToken, refreshToken] = [_generateAccessToken(user.id), (await _createRefreshToken(user, null, req.ip)).token];
-        res.cookie("refreshToken", refreshToken, { httpOnly: true });
-
+        
         // Return a requery of the user with the church info included
-        res.status(201).json({ user, accessToken });
+        res.status(201).json({ user });
     } catch (error) { next(error); }
 }
 
-const updateIndivUser = async (userId: string, req: Request, res: Response, next: any) => {
+const updateIndivUser = async (req: Request, res: Response, next: any) => {
+    if(req.userId == undefined)
+            return res.status(400).send("Authentication required. Please sign in.");
     try {
         // Update the Individual
         await prisma.individual.update({
-            where: { userId: userId },
+            where: { userId: req.userId },
             data: {
                 firstName: req.body.indiv.firstName,
                 lastName: req.body.indiv.lastName,
@@ -86,20 +91,22 @@ const updateIndivUser = async (userId: string, req: Request, res: Response, next
 
         // Update the User
         const user = await prisma.user.update({
-            where: { id: userId },
+            where: { id: req.userId },
             data: { email: req.body.user.email, },
             include: { indiv: true, },
         });
         
-        res.status(201).json(user);
+        return res.status(201).json(user);
     } catch(error) { next(error); }
 };
 
-const updateChurchUser = async (userId: string, req: Request, res: Response, next: any) => {
+const updateChurchUser = async (req: Request, res: Response, next: any) => {
+    if(req.userId == null)
+            return res.status(400).send("Authentication required. Please sign in.");
     try {
         // Update the Church
         await prisma.church.update({
-            where: { userId: userId },
+            where: { userId: req.userId },
             data: {
                 name: req.body.church.name,
                 address: req.body.church.address,
@@ -108,14 +115,75 @@ const updateChurchUser = async (userId: string, req: Request, res: Response, nex
 
         // Update the User
         const user = await prisma.user.update({
-            where: { id: req.body.user.id, },
+            where: { id: req.userId, },
             data: { email: req.body.user.email, },
             include: { church: true, },
         }); 
 
-        res.status(201).json(user);
+        return res.status(201).json(user);
     } catch(error) { next(error); }
 };
+
+const refreshAccessToken = async (req: Request, res: Response, next: any) => {
+    try { 
+        const currentRefreshToken = req.cookies['refreshToken'];
+        if(currentRefreshToken == null) 
+            return res.status(400).json('refreshToken cookie required to receive new access token.');
+        
+        const [accessToken, newRefreshToken] = await _checkAndGenTokens(currentRefreshToken, req.ip);
+        res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
+
+        return res.status(200).json({ accessToken })
+    } catch(error) {
+        if(error instanceof UserNotFoundError) {
+            return res.status(400).send("User did not match refresh token.");
+        } else if(error instanceof RevokedTokenError) {
+            return res.status(400).send("Revoked token error: please sign in again.");
+        } else if(error instanceof StaleTokenError) {
+            return res.status(400).send("Stale token error: please sign in again.");
+        }
+        return next(error);
+    }
+}
+
+const logout = async(req: Request, res: Response, next: any) => {
+    try {
+        const cookie = req.cookies['refreshToken'];
+        const currentRefreshToken = await prisma.refreshToken.findFirst({
+            where: { token: cookie },
+        });
+
+        if(currentRefreshToken != null)
+            _revokeRefreshToken(currentRefreshToken, req.ip);
+
+        res.clearCookie('refreshToken');
+        return res.status(200).send();
+    }   catch(error) { return next(error); }
+}
+
+const login = async(req: Request, res: Response, next: any) => {
+    try {
+        const { email, password } = req.body;
+        const user = await prisma.user.findFirst({
+            where: { email: email }
+        });
+
+        if(user != null) {
+            if(await bcrypt.compare(password, user.passwordHash)) {
+                const [accessToken, refreshToken] = [
+                    _generateAccessToken(user.id),
+                    await _generateRefreshToken(user, null, req.ip)
+                ];
+
+                res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
+                return res.status(200).json({ accessToken });
+            }
+        }
+
+        res.status(400).send("Email/Password combination didn't match. Please try again.");
+    }   catch(error) { return next(error); }
+}
+// #endregion Exported Functions
 
 // #region Private Functions
 const _hashPassword = async (password: string): Promise<string> => {
@@ -124,12 +192,12 @@ const _hashPassword = async (password: string): Promise<string> => {
     return hashedPassword;
 };
 
-const _generateAccessToken = (user_id: string): string => {
+const _generateAccessToken = (userId: string): string => {
     if(process.env.TOKEN_KEY == undefined)
         throw new TokenKeyNotDefinedError();
 
     const token = jwt.sign(
-        { user_id }, process.env.TOKEN_KEY, {
+        { userId }, process.env.TOKEN_KEY, {
             expiresIn: "5m"
         }
     );
@@ -137,72 +205,18 @@ const _generateAccessToken = (user_id: string): string => {
     return token;
 }
 
-// Generates a new refresh token for a user, given a current refresh token
-const _generateNewRefreshToken = async (token: string, ipAddress: string): Promise<string> => {
-    const now = new Date();
-
-    // Find the user who owns the given refresh token
-    const user = await prisma.user.findFirst({
-        where: { refreshToken: { 
-            some: { token: token }
-        } },
-
-        // Only include the refresh token for the client
-        // currently connecting
-        include: { refreshToken: {
-            where: { token: token }
-        } },
-    });
-
-    // If that user was not found, return a user not found error
-    if(user == null) 
-        throw new UserNotFoundError();
-
-    const currentToken = user.refreshToken[0];
-
-    // If the token has already been revoked, the user's account may have
-    // a security problem. Revoke it's decendent token to end the branch.
-    if (currentToken.revoked) {
-        await _revokeRefreshToken(currentToken, now);
-        throw new RevokedTokenError();
-    }
-
-    // If the token is stale, the user needs to be revoked.
-    // The user must log back in.
-    if(now.getTime() > currentToken.expires.getTime()) {
-        throw new StaleTokenError();
-    }
-
-    const newToken =  await _createRefreshToken(user, currentToken, ipAddress);
-    return newToken.token;
-}
-
-const _revokeRefreshToken = async (currentToken: RefreshToken, now: Date) => {
-    let replacementToken;
-    while (currentToken?.replacementId != null) {
-        replacementToken = await prisma.refreshToken.findFirst({
-            where: { id: currentToken?.replacementId }
-        });
-    }
-    if (replacementToken != null) {
-        await prisma.refreshToken.update({
-            where: { id: replacementToken.id },
-            data: {
-                revoked: now,
-                revokedByIp: "server: duplicate refresh"
-            }
-        });
-    }
-}
-
-const _createRefreshToken = async (user: User, currentToken: RefreshToken | null, ipAddress: string): Promise<RefreshToken> => {
+const _generateRefreshToken = async (user: User, currentToken: RefreshToken | null, ipAddress: string): Promise<RefreshToken> => {
 
     const now = new Date();
     const bytes = crypto.randomBytes(64).toString('base64');
+
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 7);
+
     const newRefreshToken = await prisma.refreshToken.create({
         data: {
             token: bytes,
-            expires: new Date(now.getTime() + (5 * 60000)), // add five minutes to now
+            expires: expirationDate, // one week
             created: now,
             createdByIp: ipAddress,
             userId: user.id,
@@ -221,18 +235,87 @@ const _createRefreshToken = async (user: User, currentToken: RefreshToken | null
 
     return newRefreshToken;
 }
-// #endregion
+
+// Generates a new access and refresh token for a user, given a current refresh token.
+// Tests the given refresh token to ensure it is still valid.
+const _checkAndGenTokens = async (refreshToken: string, ipAddress: string): Promise<[string, string]> => {
+    const now = new Date();
+
+    // Find the user who owns the given refresh token
+    const user = await prisma.user.findFirst({
+        where: { 
+            refreshToken: { 
+                some: { token: refreshToken }
+            },
+        },
+
+        // Only include the current refresh token for the client
+        // currently connecting
+        include: { refreshToken: {
+            where: { token: refreshToken }
+        } },
+    });
+
+    // If that user was not found, return a user not found error
+    if(user == null) 
+        throw new UserNotFoundError();
+
+    const currentToken = user.refreshToken[0];
+
+    // If the token has already been revoked, the user's account may have
+    // a security problem. Revoke it's decendent token to end the branch.
+    if (currentToken.revoked) {
+        await _revokeRefreshToken(currentToken, "server: duplicate refresh");
+        throw new RevokedTokenError();
+    }
+
+    // If the token is stale, the user needs to be revoked.
+    // The user must log back in.
+    if(now.getTime() > currentToken.expires.getTime()) {
+        throw new StaleTokenError();
+    }
+
+    const newToken =  await _generateRefreshToken(user, currentToken, ipAddress);
+    return [
+        _generateAccessToken(user.id), 
+        newToken.token
+    ];
+}
+
+const _revokeRefreshToken = async (currentToken: RefreshToken, ipAddress: string) => {
+
+    let replacementToken: RefreshToken | null = currentToken;
+    while (replacementToken?.replacementId != null) {
+        replacementToken = await prisma.refreshToken.findFirst({
+            where: { id: replacementToken.replacementId }
+        });
+    }
+    if (replacementToken != null) {
+        await prisma.refreshToken.update({
+            where: { id: replacementToken.id },
+            data: {
+                revoked: new Date(),
+                revokedByIp: ipAddress,
+            }
+        });
+    }
+}
+
+// #endregion Private Functions
 
 // #region Errors
 class StaleTokenError extends Error { }
 class RevokedTokenError extends Error { }
 class UserNotFoundError extends Error { }
-// #endregion
+// #endregion Errors
 
 export { 
     createIndivUser,
     createChurchUser,
     updateIndivUser,
     updateChurchUser,
+    refreshAccessToken,
+    logout,
+    login,
 };
 
