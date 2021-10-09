@@ -3,9 +3,17 @@ import express from "express";
 import { body, validationResult } from 'express-validator';
 import { Request, Response } from 'express';
 
-import { createChurchUser, createIndivUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
+import { createChurchUser, createIndivUser, getUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
 
 const userRouter = express.Router();
+
+userRouter.get('/:userId',
+
+    async (req: Request, res: Response, next) => {
+        return await getUser(req, res, next);
+    }
+
+);
 
 // POST create an Individual User account
 userRouter.post('/create/indiv',

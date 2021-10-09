@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { body } from 'express-validator';
+import { body, validationResult } from 'express-validator';
 
 import { refreshAccessToken, login, logout } from '../controllers/auth-controller';
 
@@ -12,7 +12,11 @@ authRouter.post('/login',
     body('password').isString(),
 
     async(req: Request, res: Response, next) => {
-        await login(req, res, next);
+        const errors = validationResult(req);
+        if(errors) {
+            return res.status(400).json(errors);
+        }
+        return await login(req, res, next);
     }
 );
 

@@ -7,6 +7,7 @@ import { RefreshToken, User } from '@prisma/client';
 import { TokenKeyNotDefinedError } from '../middleware/auth';
 import { prisma } from '../client';
 
+// #region Exported Functions
 /** 
  * Retrieves refresh token cookie, verifies it, and returns a new access token
  * and refresh token if the refresh token verifies.
@@ -74,8 +75,6 @@ const login = async(req: Request, res: Response, next: any) => {
 // #endregion Exported Functions
 
 // #region Private Functions
-
-
 const _generateAccessToken = (userId: string): string => {
     if(process.env.TOKEN_KEY == undefined)
         throw new TokenKeyNotDefinedError();

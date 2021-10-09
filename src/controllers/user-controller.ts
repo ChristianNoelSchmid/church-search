@@ -2,6 +2,30 @@ import { Request, Response } from 'express';
 import { prisma } from '../client';
 import bcrypt from 'bcrypt';
 
+const getUser = async (req: Request, res: Response, next: any) => {
+    try {
+        const user = await prisma.user.findFirst({
+            where: { id: req.params.userId },
+            select: {
+                userType: true,
+                church: true,
+                indiv: true,
+                passwordHash: false,
+            },
+        });
+
+        if(user) {
+            return res.status(200).json(user);
+        } else {
+            return res.status(400).json({ msg: "User with the given id not found" });
+        }
+    }   catch(error) { next(error); }
+}
+
+const searchUsers = async (req: Request, res: Response, next: any) => {
+    // TODO
+}
+
 /**
  * Creates an Individual User, using the Request body json
  * @returns A json result of the new User, with it's Individual info
@@ -126,6 +150,7 @@ const _hashPassword = async (password: string): Promise<string> => {
 };
 
 export { 
+    getUser,
     createIndivUser,
     createChurchUser,
     updateIndivUser,
