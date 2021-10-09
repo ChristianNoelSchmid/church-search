@@ -4,6 +4,7 @@ import logger from "morgan";
 import cookieParser from 'cookie-parser';
 import { verifyToken } from './middleware/auth';
 
+import { authRouter } from './routes/auth';
 import { indexRouter } from './routes/index';
 import { userRouter } from './routes/users';
 
@@ -19,6 +20,7 @@ app.use(verifyToken);
 
 // Routing Middleware
 app.use('/', indexRouter);
+app.use('/auth', authRouter);
 app.use('/users', userRouter);
 
 // catch 404 and forward to error handler

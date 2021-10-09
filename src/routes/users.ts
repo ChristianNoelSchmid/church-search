@@ -1,7 +1,7 @@
 import express from "express";
 
 import { body, validationResult } from 'express-validator';
-import { login, createChurchUser, createIndivUser, refreshAccessToken, logout, updateChurchUser, updateIndivUser } from "../controllers/user_controller";
+import { createChurchUser, createIndivUser, updateChurchUser, updateIndivUser } from "../controllers/user_controller";
 import { Request, Response } from 'express';
 
 const userRouter = express.Router();
@@ -83,29 +83,4 @@ userRouter.put('/update/church',
 
 );
 
-// POST requests a new access and refresh token, with
-// refresh token cookie
-userRouter.post('/refresh',
-    async (req: Request, res: Response, next) => {
-        await refreshAccessToken(req, res, next);
-    }
-);
-
-// POST logs into the site
-userRouter.post('/login',
-
-    body('email').isEmail(),
-    body('password').isString(),
-
-    async(req: Request, res: Response, next) => {
-        await login(req, res, next);
-    }
-);
-
-// PUT logs out of the site
-userRouter.put('/logout',
-    async (req: Request, res: Response, next) => {
-        await logout(req, res, next);
-    }
-);
 export { userRouter };
