@@ -1,8 +1,9 @@
 import express from "express";
 
 import { body, validationResult } from 'express-validator';
-import { createChurchUser, createIndivUser, updateChurchUser, updateIndivUser } from "../controllers/user_controller";
 import { Request, Response } from 'express';
+
+import { createChurchUser, createIndivUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
 
 const userRouter = express.Router();
 

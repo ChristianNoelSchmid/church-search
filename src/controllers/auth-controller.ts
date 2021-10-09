@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { prisma } from '../client';
 import jwt from 'jsonwebtoken'
 import { RefreshToken, User } from '@prisma/client';
+
 import { TokenKeyNotDefinedError } from '../middleware/auth';
+import { prisma } from '../client';
 
 /** 
  * Retrieves refresh token cookie, verifies it, and returns a new access token

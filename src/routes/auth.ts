@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { body } from 'express-validator';
-import { refreshAccessToken, login, logout } from '../controllers/auth_controller';
+
+import { refreshAccessToken, login, logout } from '../controllers/auth-controller';
 
 const authRouter = express.Router();
 
