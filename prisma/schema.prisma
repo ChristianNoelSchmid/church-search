@@ -72,9 +72,18 @@ model Individual {
     @@id([userId])
 }
 
+model QuizTemplate {
+    id        Int    @id @default(autoincrement())
+    questions String @db.Text
+    quizzes   Quiz[]
+}
+
 model Quiz {
     id      String @id @default(uuid()) @db.VarChar(255)
-    answers String @db.VarChar(255)
+    answers String @db.TinyText
+
+    templateId Int
+    template   QuizTemplate @relation(fields: [templateId], references: [id])
 
     userId String @db.VarChar(255)
     user   User   @relation(fields: [userId], references: [id])

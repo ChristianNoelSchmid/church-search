@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { prisma } from '../client';
 import bcrypt from 'bcrypt';
 
+/**
+ * Retrieves a single user with the given Id, found in the Request params
+ */
 const getUser = async (req: Request, res: Response, next: any) => {
     try {
         const user = await prisma.user.findFirst({
@@ -23,7 +26,12 @@ const getUser = async (req: Request, res: Response, next: any) => {
 }
 
 const searchUsers = async (req: Request, res: Response, next: any) => {
-    // TODO
+    try {
+        const { searchParams } = req.body;
+        const users = await prisma.user.findMany({
+            where: { } // Query 
+        });
+    }   catch(error) { next(error); }
 }
 
 /**
@@ -57,7 +65,7 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
 
         // Return a requery of the user with the individual info included
         res.status(201).json({ user });
-    } catch(error) { next(error); }
+    }   catch(error) { next(error); }
 }
 
 /**
@@ -116,7 +124,7 @@ const updateIndivUser = async (req: Request, res: Response, next: any) => {
         });
         
         return res.status(201).json(user);
-    } catch(error) { next(error); }
+    }   catch(error) { next(error); }
 };
 
 const updateChurchUser = async (req: Request, res: Response, next: any) => {

@@ -5,11 +5,10 @@ import cookieParser from 'cookie-parser';
 import { verifyToken } from './middleware/auth';
 
 import { authRouter } from './routes/auth';
-import { indexRouter } from './routes/index';
 import { userRouter } from './routes/users';
+import { quizRouter } from './routes/quiz';
 
 const app: Application = express();
-const port = 3000;
 
 // Body parsing Middleware
 app.use(logger('dev'));
@@ -19,9 +18,9 @@ app.use(cookieParser());
 app.use(verifyToken);
 
 // Routing Middleware
-app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
+app.use('/quiz', quizRouter);
 
 // catch 404 and forward to error handler
 app.use(function(_req: Request, res: Response, next: any) {
