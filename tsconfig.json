@@ -15,7 +15,7 @@
     "forceConsistentCasingInFileNames": true,
 
     "typeRoots": [
-      "@types",
+      "src/@types",
       "./node_modules/@types"
     ]
   },

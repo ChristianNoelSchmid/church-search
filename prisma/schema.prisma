@@ -38,7 +38,7 @@ model User {
     confirmedEmail Boolean  @default(false)
 
     // The User's quizzes and reviews
-    Quiz   Quiz[]
+    quiz   Quiz?
     Review Review[]
 
     church Church?
@@ -85,7 +85,7 @@ model Quiz {
     templateId Int
     template   QuizTemplate @relation(fields: [templateId], references: [id])
 
-    userId String @db.VarChar(255)
+    userId String @db.VarChar(255)@unique
     user   User   @relation(fields: [userId], references: [id])
 }
 

@@ -83,7 +83,7 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
         }
 
         // Create the User, and the associated Church
-        const user = await prisma.user.create({
+        let user = await prisma.user.create({
             data: {
                 email: req.body.user.email,
                 passwordHash: await _hashPassword(req.body.user.password),
@@ -96,6 +96,16 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
             },
             include: { church: true, },
         });
+
+        // If there is a Quiz cookie that exists, assign it to the
+        // new User
+        /* if(req.cookies.quiz) {
+            await prisma.quiz.create({
+                data: {
+                    answers: req.cookies.quiz, 
+                }
+            })
+        }*/
 
         
         // Return a requery of the user with the church info included
