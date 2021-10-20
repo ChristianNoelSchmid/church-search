@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../client';
 import bcrypt from 'bcrypt';
-import { gmail_v1, google, GoogleApis } from 'googleapis';
-import { GeneratedAPIs } from 'googleapis/build/src/apis';
-import { gmail } from 'googleapis/build/src/apis/gmail';
 
 /**
  * Retrieves a single user with the given Id, found in the Request params
@@ -56,9 +53,6 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
             },
             include: { indiv: true, },
         });
-
-        const gmail = new gmail_v1.Gmail({ });
-        gmail.users.messages.send()
 
         // Return a requery of the user with the individual info included
         res.status(201).json({ user });
