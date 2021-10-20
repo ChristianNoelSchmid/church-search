@@ -4,9 +4,9 @@ import logger from "morgan";
 import cookieParser from 'cookie-parser';
 import { verifyToken } from './middleware/auth';
 
-import { authRouter } from './routes/auth';
-import { userRouter } from './routes/users';
-import { quizRouter } from './routes/quiz';
+import { authRouter } from './routes/auth-router';
+import { userRouter } from './routes/user-router';
+import { quizRouter } from './routes/quiz-router';
 
 const app: Application = express();
 

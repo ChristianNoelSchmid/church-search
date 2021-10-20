@@ -7,6 +7,7 @@ import { createChurchUser, createIndivUser, getUser, updateChurchUser, updateInd
 
 const userRouter = express.Router();
 
+// GET Read a user account
 userRouter.get('/:userId',
 
     async (req: Request, res: Response, next) => {
@@ -15,7 +16,7 @@ userRouter.get('/:userId',
 
 );
 
-// POST create an Individual User account
+// POST Create an Individual User account
 userRouter.post('/create/indiv',
 
     body('user.email').isEmail(),
@@ -35,7 +36,7 @@ userRouter.post('/create/indiv',
     }
 );
 
-// POST create a Church User account
+// POST Create a Church User account
 userRouter.post('/create/church',
     
     body('user.email').isEmail(),
@@ -55,7 +56,7 @@ userRouter.post('/create/church',
     }
 );
 
-// PUT update an Individual User account
+// PUT Update an Individual User account
 userRouter.put('/update/indiv',
 
     body('user.email').isEmail(),
@@ -73,7 +74,7 @@ userRouter.put('/update/indiv',
 
 );
 
-// PUT update a Church User account
+// PUT Update a Church User account
 userRouter.put('/update/church',
     
     body('user.email').isEmail(),
