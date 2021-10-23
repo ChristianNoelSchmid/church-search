@@ -1,13 +1,25 @@
 datasource db {
+
     provider = "mysql"
     url      = env("DATABASE_URL")
 }
 
 generator client {
+
     provider = "prisma-client-js"
 }
 
+// The type of a single account
+enum UserType {
+
+    Church
+    Individual
+}
+
+// All relevant information needed to generate, validate,
+// and log the history of refresh tokens
 model RefreshToken {
+
     id      Int      @id @default(autoincrement())
     token   String   @db.VarChar(255)
     expires DateTime
@@ -23,110 +35,136 @@ model RefreshToken {
     user   User?   @relation(fields: [userId], references: [id])
 }
 
-// The type of a single account
-enum UserType {
-    Church
-    Individual
-}
-
 // A user account, which holds all unique data to a particular user
 model User {
+
     id             String   @id @default(uuid()) @db.VarChar(255)
     email          String   @unique
     passwordHash   String
     userType       UserType
     confirmedEmail Boolean  @default(false)
 
-    // The User's quizzes and reviews
-    quiz   Quiz?
-    Review Review[]
+    aboutMe String @db.VarChar(1024)
 
+    // The User's personal profile. One of these
+    // will be populated, depending on the UserType
     church Church?
     indiv  Individual?
 
     // The User's Refresh tokens
     refreshToken RefreshToken[]
+    answers      Answer[]
 }
 
 // Stores information related to a church.
 // Attached to account when account's type is Church
 model Church {
-    userId String @db.VarChar(255)
+
+    userId String @id @db.VarChar(255)
     user   User?  @relation(fields: [userId], references: [id])
 
     name    String
     address String?
 
-    @@id([userId])
+    // All ReviewAnswers that various users have given
+    // regarding this Church
+    reviewAnswers  ReviewAnswer[]
+    ChurchFeedback ChurchFeedback[]
 }
 
 // Stores information related to an individual.
 // Attached to account when account's type is Individual
 model Individual {
-    userId String @db.VarChar(255)
+
+    userId String @id @db.VarChar(255)
     user   User?  @relation(fields: [userId], references: [id])
 
     firstName String
     lastName  String
 
-    @@id([userId])
-}
-
-model Question {
-    id   Int    @id @default(autoincrement())
-    text String @db.VarChar(255)
-
-    questionToTemplate QuestionToTemplate[]
+    // All ReviewAnswers this Individual has given
+    reviewAnswers  ReviewAnswer[]
+    ChurchFeedback ChurchFeedback[]
 }
 
 model QuizTemplate {
-    id        Int    @id @default(autoincrement())
-    questions String @db.Text
-    quizzes   Quiz[]
 
-    questionToTemplate QuestionToTemplate[]
+    id Int @id @default(autoincrement())
+
+    qToTemp QuestionToTemplate[]
+}
+
+model Question {
+
+    id   Int    @id @default(autoincrement())
+    text String @db.VarChar(255)
+
+    qToTemp      QuestionToTemplate[]
+    answers      Answer[]
+    ReviewAnswer ReviewAnswer[]
 }
 
 model QuestionToTemplate {
+
+    // What order is the question in the template?
+    qIndex Int
+
     questionId Int
     question   Question @relation(fields: [questionId], references: [id])
 
     templateId Int
     template   QuizTemplate @relation(fields: [templateId], references: [id])
 
-    @@id([questionId, templateId])
+    @@id([questionId, templateId], name: "id")
 }
 
-model Quiz {
-    id      String @id @default(uuid()) @db.VarChar(255)
-    answers String @db.TinyText
+model Answer {
 
-    templateId Int
-    template   QuizTemplate @relation(fields: [templateId], references: [id])
+    choice Int
 
-    userId String @unique @db.VarChar(255)
+    userId String @db.VarChar(255)
     user   User   @relation(fields: [userId], references: [id])
+
+    questionId Int
+    question   Question @relation(fields: [questionId], references: [id])
+
+    @@id([userId, questionId], name: "id")
 }
 
-model Review {
+// An Individual's (or anonymous user's) feedback on
+// a given Church
+model ChurchFeedback {
+
     id String @id @default(uuid()) @db.VarChar(255)
 
-    userId String? @db.VarChar(255)
-    user   User?   @relation(fields: [userId], references: [id])
+    feedback String @db.VarChar(1024)
 
-    isAnonymous Boolean @default(false)
+    churchUser   Church @relation(fields: [churchUserId], references: [userId])
+    churchUserId String @db.VarChar(255)
 
-    quizId   Int
-    answers  String    @db.VarChar(255)
-    comments Comment[]
+    indivUser   Individual? @relation(fields: [indivUserId], references: [userId])
+    indivUserId String?     @db.VarChar(255)
 }
 
-model Comment {
+// Connects an Individual's feedback to a
+// Church's Question / Answer.
+model ReviewAnswer {
+
     id String @id @default(uuid()) @db.VarChar(255)
 
-    reviewId String @db.VarChar(255)
-    review   Review @relation(fields: [reviewId], references: [id])
+    choice      Int
+    comment     String? @db.VarChar(255)
+    isAnonymous Boolean @default(true)
 
-    answerIndex Int
-    comment     String @db.VarChar(255)
+    // The Church being reviewed
+    churchUser   Church @relation(fields: [churchUserId], references: [userId])
+    churchUserId String @db.VarChar(255)
+
+    // The Individual giving the review
+    reviewerUser   Individual? @relation(fields: [reviewerUserId], references: [userId])
+    reviewerUserId String?     @db.VarChar(255)
+
+    // The specific Question being answered and commented on
+    questionId Int
+    question   Question @relation(fields: [questionId], references: [id])
 }
