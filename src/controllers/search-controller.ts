@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../client';
 
-import { _getQuizTemplate } from './quiz-controller';
+import { getQuizTemplate } from './quiz-controller';
 
 // #region Exported Functions
 /**
@@ -29,16 +29,16 @@ const searchChurches = async(req: Request, res: Response, next: any) => {
         const churchUsers = (await prisma.user.findMany({
             where: { 
                 userType: "Church",
-                NOT: { quiz: null, },
+                NOT: { answers: undefined, },
             },
             include: { 
                 church: true, 
-                quiz: true 
+                answers: true 
             },
         })).map(user => { return {
             id: user.id,
             name: user.church!.name,
-            scores: user.quiz!.answers.split(':')
+            scores: user.answers.split(':')
                 .map(score => Number.parseInt(score))
         }});
 
@@ -67,7 +67,7 @@ const searchChurches = async(req: Request, res: Response, next: any) => {
 // #region Private Functions
 const _getUserQuiz = async (req: Request, res: Response): Promise<number[]> => {
 
-    const quizTemplate = await _getQuizTemplate();
+    const quizTemplate = await getQuizTemplate();
     let quizValues: string[];
     if(req.userId) {
         const user = req.user!;

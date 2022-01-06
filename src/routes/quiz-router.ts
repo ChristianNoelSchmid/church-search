@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 
-import { getQuiz, createQuiz, _getQuizTemplate } from "../controllers/quiz-controller";
+import { getQuiz, createQuiz, getQuizTemplate } from "../controllers/quiz-controller";
 
 const quizRouter = express.Router();
 
@@ -15,7 +15,7 @@ quizRouter.post("/create",
         if(!Array.isArray(answers)) {
             return Promise.reject("Answers must be given as an array.");
         }
-        const template = await _getQuizTemplate();
+        const template = await getQuizTemplate();
         if(answers.length != template.questions.split(":").length)
             return Promise.reject("Answer count does not match length of template.");
 

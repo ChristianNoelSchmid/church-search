@@ -7,8 +7,8 @@ import { prisma } from '../../client';
 declare global {
     namespace Express {
         export interface Request {
-            userId: string | null;
-            get user(): User | null;
+            userId: string | undefined;
+            get user(): User | undefined;
         }
     }
 

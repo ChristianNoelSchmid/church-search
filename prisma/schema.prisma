@@ -11,7 +11,6 @@ generator client {
 
 // The type of a single account
 enum UserType {
-
     Church
     Individual
 }
@@ -90,7 +89,6 @@ model Individual {
 model QuizTemplate {
 
     id Int @id @default(autoincrement())
-
     qToTemp QuestionToTemplate[]
 }
 
@@ -118,6 +116,7 @@ model QuestionToTemplate {
     @@id([questionId, templateId], name: "id")
 }
 
+// An Account's unique answer to a quiz question
 model Answer {
 
     choice Int

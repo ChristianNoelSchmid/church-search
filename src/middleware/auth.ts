@@ -1,5 +1,8 @@
+import { UserType } from '@prisma/client';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { isFunction } from 'util';
+import { prisma } from '../client';
 
 const config = process.env;
 
@@ -31,6 +34,20 @@ const verifyToken = (req: Request, res: Response, next: any) => {
     }
     return next();
 };
+
+function authorized() {
+    return async function(req: Request, res: Response, next: any) {
+        const user = await prisma.user.findFirst({
+            where: { id: req.userId },
+        });
+
+        if(user == null) {
+            return res.status(401).json("Unauthorized");
+        } else {
+            return next();
+        }
+    }
+}
 
 // #region Errors
 /**
