@@ -36,13 +36,14 @@ model RefreshToken {
 
 // A user account, which holds all unique data to a particular user
 model User {
-
     id             String   @id @default(uuid()) @db.VarChar(255)
     email          String   @unique @db.VarChar(255)
     passwordHash   String
     userType       UserType
 
-    confirmedEmail Boolean  @default(false)
+    confirmedEmail      Boolean  @default(false)
+    confirmedEmailRoute String? @db.VarChar(64) @unique
+    replacementEmail    String? @db.VarChar(255)
 
     aboutMe String @db.VarChar(1024)
 

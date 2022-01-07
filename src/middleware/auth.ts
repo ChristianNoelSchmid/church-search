@@ -1,8 +1,5 @@
-import { UserType } from '@prisma/client';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { ReadableStreamBYOBRequest } from 'stream/web';
-import { isFunction } from 'util';
 import { prisma } from '../client';
 
 const config = process.env;
@@ -13,7 +10,7 @@ const config = process.env;
  * @param req the request object
  * @param res the response object
  */
-const verifyToken = (req: Request, res: Response, next: any) => {
+const verifyToken = async (req: Request, res: Response, next: any) => {
     // Retrieve the access token
     let token = req.body.token || req.query.token;
 
@@ -29,6 +26,17 @@ const verifyToken = (req: Request, res: Response, next: any) => {
     try {  
         const decoded = jwt.verify(token, config.TOKEN_KEY) as any;
         req.userId = decoded.userId;
+        const user = await prisma.user.findFirst({
+            where: { id: req.userId }
+        });
+
+        // If JWT verification is successful, but the user isn't found, a server
+        // error has occured
+        if(user == null) {
+            return res.status(500).send("Server Error. Please try again later.");
+        } else {
+            req.user = user;
+        }
     } catch(error) {
         res.status(401).send("Invalid Token. Please try refresh, or login again.");
         return next(error);

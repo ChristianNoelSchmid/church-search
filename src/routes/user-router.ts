@@ -3,7 +3,7 @@ import express from "express";
 import { body, validationResult } from 'express-validator';
 import { Request, Response } from 'express';
 
-import { createChurchUser, createIndivUser, getUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
+import { confirmEmail, createChurchUser, createIndivUser, getUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
 
 const userRouter = express.Router();
 
@@ -34,6 +34,13 @@ userRouter.post('/create/indiv',
 
         createIndivUser(req, res, next);
     }
+);
+
+userRouter.get('/confirm-email/:emailRoute', 
+
+    async (req: Request, res: Response, next) => {
+        return await confirmEmail(req, res, next);
+    }   
 );
 
 // POST Create a Church User account
