@@ -3,7 +3,7 @@ import express from "express";
 import { body, validationResult } from 'express-validator';
 import { Request, Response } from 'express';
 
-import { confirmEmail, createChurchUser, createIndivUser, getUser, updateChurchUser, updateIndivUser } from "../controllers/user-controller";
+import { confirmEmail, createChurchUser, createIndivUser, getUser, updateChurchUser, updateIndivUser, updateUserEmail } from "../controllers/user-controller";
 
 const userRouter = express.Router();
 
@@ -91,6 +91,18 @@ userRouter.put('/update/church',
         updateChurchUser(req, res, next);
     }
 
+);
+
+userRouter.put('/update/email',
+    body('email').isEmail(), 
+    async(req: Request, res: Response, next) => {
+        const errors = validationResult(req);
+        if(!errors.isEmpty()) {
+            res.status(400).json({ errors: errors });
+        }
+
+        await updateUserEmail(req, res, next);
+    }
 );
 
 export { userRouter };

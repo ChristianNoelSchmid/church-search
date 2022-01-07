@@ -86,6 +86,7 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
         let user = await prisma.user.create({
             data: {
                 email: req.body.user.email,
+                replacementEmail: req.body.user.email,
                 passwordHash: await _hashPassword(req.body.user.password),
                 userType: UserType.Church,
                 aboutMe: req.body.user.aboutMe,
@@ -117,23 +118,39 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
 
 const confirmEmail = async (req: Request, res: Response, next: any) => {
     try {
-        let user = prisma.user.update({
+        const user = await prisma.user.findFirst({
             where: { confirmedEmailRoute: req.params.emailRoute },
-            data: { confirmedEmail: true, confirmedEmailRoute: null }
         });
 
-        if(user != null) {
-            return res.status(200).send("Account confirmed - thanks!");
-        } else {
+        if(user == null) {
             return res.status(401).send("Account not found");
+        } else if(user.replacementEmail != null) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    email: user.replacementEmail,
+                    confirmedEmailRoute: null,
+                    confirmedEmail: true,
+                }
+            })
+        } else {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { 
+                    confirmedEmailRoute: null, 
+                    confirmedEmail: true, 
+                }
+            });
         }
+        
+        return res.status(200).send("Account confirmed - thanks!");
     } catch(error) { return next(error); }
 }
 
 const updateUserEmail = async (req: Request, res: Response, next: any) => {
-    requireAuthorization(req, res, () => {
+    requireAuthorization(req, res, async () => {
         try {
-            let user = prisma.user.findFirst({
+            const user = await prisma.user.findFirst({
                 where: { OR: [
                     { email: req.body.email }, 
                     { replacementEmail: req.body.email },
@@ -146,7 +163,7 @@ const updateUserEmail = async (req: Request, res: Response, next: any) => {
 
             const emailRoute = _generateEmailRoute();
 
-            prisma.user.update({
+            await prisma.user.update({
                 where: { id: req.userId },
                 data: {
                     replacementEmail: req.body.email,
@@ -154,6 +171,8 @@ const updateUserEmail = async (req: Request, res: Response, next: any) => {
                     confirmedEmailRoute: emailRoute,
                 }
             });
+
+            return res.status(200).send("Updated. Please confirm email!");
         } catch(error) { return next(error); }
     });
 }
@@ -207,5 +226,6 @@ export {
     confirmEmail,
     updateIndivUser,
     updateChurchUser,
+    updateUserEmail,
 };
 
