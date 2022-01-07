@@ -2,13 +2,15 @@ import { Request, Response } from 'express';
 
 import { Question } from '@prisma/client';
 import { prisma } from '../client';
+import { requireAuthorization } from '../middleware/auth';
 
 // #region Exported Functions
+
+// Retrieves the current series of answers from the current template
 const getQuiz = async (res: Response, next: any) => {
     try {
         // Get the current QuizTemplate, throwing an Error if it is not defined
         const questions = await getQuizTemplate();
-
         return res.status(200).json({ questions });
     } catch(error) { return next(error); }
 }
@@ -27,10 +29,20 @@ const getAnswers = async (req: Request, res: Response, next: any) => {
 }
 
 const addAnswer = async (req: Request, res: Response, next: any) => {
-    try {
-        const answer = req.body.answer;
+    const answer = req.body.answer;
 
-        if(req.userId) {
+    const questions = await getQuizTemplate();
+    const updateQuestionIndex = questions.findIndex(q => q.id == answer.questionId);
+
+    // If the answer is for a question that either doesn't exist, or
+    // isn't being used in the current quiz template, return bad request.
+    if(updateQuestionIndex == -1) {
+        return Promise.reject("Question ID is not current, or no longer exists.");
+    }
+    
+    try {
+        // If a user is logged in, add / update their answer in the database
+        if(req.userId) {  
             await prisma.answer.upsert({
                 where: { id: {
                     userId: req.userId, 
@@ -45,44 +57,19 @@ const addAnswer = async (req: Request, res: Response, next: any) => {
                     choice: answer.choice,
                 }
             });
+        // Otherwise append the answer to the cookie
         } else {
-            let answers: string[] = req.cookies['quiz'].split(':');
-            answers.splice(answer.)
+            let answerString = req.cookies.quiz;
+            if(!answerString) answerString = ":".repeat(questions.length - 1);
+
+            const answers = answerString.split(":");
+            answers.splice(updateQuestionIndex, 1, answer.choice);
+
+            res.cookie('quiz', answers.join(':'));
+            return res.status(200);
         }
 
         return next();
-    } catch(error) { return next(error); }
-}
-
-const createQuiz = async (req: Request, res: Response, next: any) => { 
-    try { 
-        // Get the current QuizTemplate, throwing an Error if it is not defined
-        const questions = await getQuizTemplate();        
-
-        // Ensure the number of answers given match the number
-        // of questions from the template
-        const answers: number[] = req.body.answers;
-    
-        // If a user is logged in, insert the quiz into the database
-        // connected to the user's Id.
-        if(req.userId) {
-            const newQuiz = await prisma.quiz.create({
-                data: {
-                    answers: answers.join(':'),
-                    templateId: template.id,
-                    userId: req.userId,
-                }
-            });
-
-            return res.status(200).json(newQuiz);
-
-        // If not, assign the quiz to a cookie
-        } else {
-            const quizCookie = answers.join(':');
-            res.cookie('quiz', quizCookie);
-
-            return res.status(200).json({ answers: quizCookie });
-        }
     } catch(error) { return next(error); }
 }
 
@@ -121,6 +108,6 @@ class QuizTemplateNotDefinedError extends Error { }
 
 export {
     getQuiz,
-    createQuiz,  
-    getQuizTemplate
+    getQuizTemplate,
+    addAnswer
 };

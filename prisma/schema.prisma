@@ -1,7 +1,7 @@
 datasource db {
-
     provider = "mysql"
     url      = env("DATABASE_URL")
+    shadowDatabaseUrl = env("DATABASE_SHADOW_URL")
 }
 
 generator client {
@@ -38,9 +38,10 @@ model RefreshToken {
 model User {
 
     id             String   @id @default(uuid()) @db.VarChar(255)
-    email          String   @unique
+    email          String   @unique @db.VarChar(255)
     passwordHash   String
     userType       UserType
+
     confirmedEmail Boolean  @default(false)
 
     aboutMe String @db.VarChar(1024)

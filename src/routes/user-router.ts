@@ -41,6 +41,7 @@ userRouter.post('/create/church',
     
     body('user.email').isEmail(),
     body('user.password').isLength({ min: 8 }),
+    body('user.aboutMe').isString(),
     body('church.name').isString(),
     body('church.address').isString(),
 
@@ -59,10 +60,6 @@ userRouter.post('/create/church',
 // PUT Update an Individual User account
 userRouter.put('/update/indiv',
 
-    body('user.email').isEmail(),
-    body('indiv.firstName').isString(),
-    body('indiv.lastName').isString(),
-
     async (req: Request, res: Response, next) => {
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -77,10 +74,6 @@ userRouter.put('/update/indiv',
 // PUT Update a Church User account
 userRouter.put('/update/church',
     
-    body('user.email').isEmail(),
-    body('church.name').isString(),
-    body('church.address').isString(),
-
     async (req: Request, res: Response, next) => {
         // Validate the incoming data
         const errors = validationResult(req);

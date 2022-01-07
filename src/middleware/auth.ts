@@ -1,6 +1,7 @@
 import { UserType } from '@prisma/client';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import { ReadableStreamBYOBRequest } from 'stream/web';
 import { isFunction } from 'util';
 import { prisma } from '../client';
 
@@ -35,17 +36,11 @@ const verifyToken = (req: Request, res: Response, next: any) => {
     return next();
 };
 
-function authorized() {
-    return async function(req: Request, res: Response, next: any) {
-        const user = await prisma.user.findFirst({
-            where: { id: req.userId },
-        });
-
-        if(user == null) {
-            return res.status(401).json("Unauthorized");
-        } else {
-            return next();
-        }
+const requireAuthorization = (req: Request, res: Response, fn: () => any) => {
+    if(!req.userId) {
+        return res.status(401).send("Authorization required. Please log in.");
+    } else {
+        return fn();
     }
 }
 
@@ -59,5 +54,6 @@ class TokenKeyNotDefinedError extends Error { }
 
 export {
     verifyToken,
+    requireAuthorization,
     TokenKeyNotDefinedError,
 };

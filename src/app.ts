@@ -2,11 +2,14 @@ import express, { Application, Request, Response } from "express";
 import createError from 'http-errors';
 import logger from "morgan";
 import cookieParser from 'cookie-parser';
-import { verifyToken } from './middleware/auth';
+import dotenv from 'dotenv';
 
+import { verifyToken } from './middleware/auth';
 import { authRouter } from './routes/auth-router';
 import { userRouter } from './routes/user-router';
 import { quizRouter } from './routes/quiz-router';
+
+dotenv.config();
 
 const app: Application = express();
 

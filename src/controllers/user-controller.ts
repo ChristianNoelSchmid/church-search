@@ -45,6 +45,7 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
                 email: req.body.user.email,
                 passwordHash: await _hashPassword(req.body.user.password),
                 userType: 'Individual',
+                aboutMe: req.body.user.aboutMe,
 
                 indiv: { create: {
                     firstName: req.body.indiv.firstName,
@@ -79,6 +80,7 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
                 email: req.body.user.email,
                 passwordHash: await _hashPassword(req.body.user.password),
                 userType: 'Church',
+                aboutMe: req.body.user.aboutMe,
                 
                 church: { create: {
                     name: req.body.church.name,
