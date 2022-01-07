@@ -41,6 +41,8 @@ model User {
     passwordHash   String
     userType       UserType
 
+    photoUrl String? @db.VarChar(255)
+
     confirmedEmail      Boolean  @default(false)
     confirmedEmailRoute String? @db.VarChar(64) @unique
     replacementEmail    String? @db.VarChar(255)

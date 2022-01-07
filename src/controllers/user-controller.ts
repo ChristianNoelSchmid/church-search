@@ -129,6 +129,7 @@ const confirmEmail = async (req: Request, res: Response, next: any) => {
                 where: { id: user.id },
                 data: {
                     email: user.replacementEmail,
+                    replacementEmail: null,
                     confirmedEmailRoute: null,
                     confirmedEmail: true,
                 }
