@@ -1,39 +1,22 @@
 import express, { Request, Response } from "express";
-import { body, validationResult } from "express-validator";
-import { off } from "process";
 
-import { getQuiz, addAnswer, getQuizTemplate } from "../controllers/quiz-controller";
+import * as quizValidator from "../validation/quiz-validator";
+import * as quizController from "../controllers/quiz-controller";
+import { validate } from "../validation/validate";
 
 const quizRouter = express.Router();
 
+// GET current quiz
 quizRouter.get("/", async (_req, res: Response, next: any) => {
-    return await getQuiz(res, next);
+    return await quizController.getQuiz(res, next);
 });
 
+// POST add an Answer from a unique User
 quizRouter.post("/add-answer", 
-
-    body('answer').custom(async answer => {
-        if(!answer.choice || !(answer.choice instanceof Number) || answer.choice != Math.floor(answer.choice)) {
-            return Promise.reject("Property `choice` must be  given as a whole number.");
-        }
-        if(!answer.questionId || !(answer.questionId instanceof String)) {
-            return Promise.reject("Property `questionId` must be given as a string.");
-        } 
-
-        return true;
-    }),
-
+    quizValidator.validateAddAnswer(), validate,
     async (req: Request, res: Response, next: any) => {
-        const errors = validationResult(req);
-        if(!errors.isEmpty()) {
-            return res.status(400).json(errors);
-        }
-
-        return await addAnswer(req, res, next);
+        return await quizController.addAnswer(req, res, next);
     }
 );
-
-
-
 
 export { quizRouter, };

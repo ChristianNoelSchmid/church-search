@@ -3,7 +3,7 @@ import express from "express";
 import { Request, Response } from 'express';
 
 import * as userController from "../controllers/user-controller";
-import * as userValidator from "../validation/userValidation";
+import * as userValidator from "../validation/user-validator";
 import { validate } from "../validation/validate";
 
 const userRouter = express.Router();
