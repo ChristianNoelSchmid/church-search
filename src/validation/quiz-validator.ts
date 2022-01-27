@@ -8,9 +8,11 @@ function validateAddAnswer() {
     return checkSchema({
         "answer": {
             isInt: true,
+            errorMessage: "Please supply an integer answer."
         },
         "questionId": {
             isString: true,
+            errorMessage: "Please supply a questionId."
         },
     });
 }

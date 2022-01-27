@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../client';
 import bcrypt from 'bcrypt';
-import crypto, { randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { requireAuthorization } from '../middleware/auth';
 import { UserType } from '@prisma/client';
 
@@ -178,38 +178,94 @@ const updateUserEmail = async (req: Request, res: Response, next: any) => {
     });
 }
 
+const updateUserPassword = async(req: Request, res: Response, next: any) => {
+    requireAuthorization(req, res, async() => {
+        try {
+            const user = await prisma.user.update({
+                where: { id: req.userId },
+                data: { passwordHash: await _hashPassword(req.body.password) }
+            });  
+            return res.status(200).send("Password updated.");
+        } catch(error) { next(error); }
+    });
+}
+
+/**
+ * Updates the authorized Individual User's information,
+ * based on the parameters given in the Request.
+ */
 const updateIndivUser = async (req: Request, res: Response, next: any) => {
-    if(!req.userId)
-        return res.status(400).send("Authentication required. Please sign in.");
-    try {
-        // Update the Individual
-        await prisma.individual.update({
-            where: { userId: req.userId },
-            data: {
-                firstName: req.body.indiv.firstName,
-                lastName: req.body.indiv.lastName,
-            },
-        }); 
- 
-        return res.status(200);
-    }   catch(error) { next(error); }
+    requireAuthorization(req, res, async () => {
+        try {
+            const body = req.body;
+            const user = await prisma.user.findFirst({
+                where: { id: req.userId },
+                include: { indiv: true },
+            });
+
+            const userData = {
+                aboutMe: body.aboutMe ?? user?.aboutMe,
+                firstName: body.firstName ?? user?.indiv?.firstName,
+                lastName: body.lastName ?? user?.indiv?.lastName,
+            }
+
+            // Update the Individual
+            await prisma.user.update({
+                where: { id: req.userId },
+                data: {
+                    aboutMe: userData.aboutMe,
+                },
+            }); 
+            await prisma.individual.update({
+                where: { userId: req.userId },
+                data: {
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                }
+            });
+    
+            return res.status(200).send("Updated.");
+        }   catch(error) { next(error); }
+    });
 };
 
+/**
+ * Updates the authorized Individual User's information,
+ * based on the parameters given in the Request.
+ */
 const updateChurchUser = async (req: Request, res: Response, next: any) => {
-    if(req.userId == null)
-            return res.status(400).send("Authentication required. Please sign in.");
-    try {
-        // Update the Church
-        await prisma.church.update({
-            where: { userId: req.userId },
-            data: {
-                name: req.body.church.name,
-                address: req.body.church.address,
-            },
-        });
+    requireAuthorization(req, res, async () => {
+        try {
+            const body = req.body;
+            const user = await prisma.user.findFirst({
+                where: { id: req.userId },
+                include: { church: true },
+            });
+            
+            const userData = {
+                aboutMe: body.aboutMe ?? user?.aboutMe,
+                name: body.name ?? user?.church?.name,
+                address: body.address?? user?.church?.address,
+            }
 
-        return res.status(200);
-    } catch(error) { next(error); }
+            // Update the Church
+            await prisma.user.update({
+                where: { id: req.userId },
+                data: {
+                    aboutMe: userData.aboutMe,
+                },
+            }); 
+            await prisma.church.update({
+                where: { userId: req.userId },
+                data: {
+                    name: userData.name,
+                    address: userData.address,
+                }
+            });
+    
+            return res.status(200).send("Updated.");
+        }   catch(error) { next(error); }
+    });
 };
 
 const _hashPassword = async (password: string): Promise<string> => {
@@ -228,5 +284,6 @@ export {
     updateIndivUser,
     updateChurchUser,
     updateUserEmail,
+    updateUserPassword,
 };
 

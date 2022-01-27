@@ -15,17 +15,15 @@ authRouter.post('/login',
 
 // PUT logs out of the site
 authRouter.put('/logout',
-    async (req: Request, res: Response, next) => {
-        await authController.logout(req, res, next);
-    }
+    async (req: Request, res: Response, next) => 
+        await authController.logout(req, res, next)
 );
 
 // POST requests a new access and refresh token, with
 // refresh token cookie
 authRouter.post('/refresh',
-    async (req: Request, res: Response, next: any) => {
-        await authController.refreshAccessToken(req, res, next);
-    }
+    async (req: Request, res: Response, next: any) => 
+        await authController.refreshAccessToken(req, res, next)
 );
 
 export { authRouter };

@@ -20,6 +20,10 @@ function validateUpdateEmail() {
     ];
 }
 
+function validateUpdatePassword() {
+    return [body("password").isLength({ min: 8 })];
+}
+
 /**
  * Validates the parameters given for the
  * registration of a Church
@@ -28,19 +32,25 @@ function validateRegisterChurch() {
     return checkSchema({
         "user.email": {
             isEmail: true,
+            errorMessage: "Please provide a valid email"
         },
         "user.password": {
-            isLength: { options: { min: 8 }},
-            errorMessage: "Password must be at least 8 characters long." ,
+            isLength: { 
+                options: { min: 8 },
+                errorMessage: "Please provide a password at least 8 characters long." ,
+            },
         },
         "user.aboutMe": {
             isString: true,
+            errorMessage: "Please provide an aboutMe"
         },
         "church.name": {
             isString: true,
+            errorMessage: "Please provide a name"
         },
         "church.address": {
-            isString: true
+            isString: true,
+            errorMessage: "Please provide an address"
         }
     });
 }
@@ -53,21 +63,25 @@ function validateRegisterIndividual() {
     return checkSchema({
         "user.email": {
             isEmail: true,
+            errorMessage: "Please provide a valid email"
         },
         "user.password": {
             isLength: { 
                 options: { min: 8 }, 
-                errorMessage: "Password must be at least 8 characters long." ,
+                errorMessage: "Please provide a password at least 8 characters long" ,
             },
         },
         "user.aboutMe": {
             isString: true,
+            errorMessage: "Please provide an aboutMe"
         },
         "indiv.firstName": {
             isString: true,
+            errorMessage: "Please provide a firstName"
         },
         "indiv.lastName": {
             isString: true,
+            errorMessage: "Please provide a lastName."
         },
     });
 }
@@ -77,4 +91,5 @@ export {
     validateRegisterChurch,
     validateRegisterIndividual,
     validateUpdateEmail,
+    validateUpdatePassword,
 }
