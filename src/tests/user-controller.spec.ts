@@ -103,7 +103,7 @@ describe('User Endpoints', () => {
         const res = await request.post('/users/create/church').send(userChurch);
             expect(res.status).toBe(400);
     });
-    test('PUT /users/update/user with appropriate values should return 200: update church', async() => {
+    test('PUT /users/update/user Church with appropriate values should return 200: update church', async() => {
         const updateData = { aboutMe: "We are Trinity Church!", name: "Trinity Church" };
         const res = await request.put('/users/update/user')
             .set("Authorization", `Bearer ${churchUser.accessToken}`)
@@ -122,8 +122,13 @@ describe('User Endpoints', () => {
         // Fields not added to the request should not be edited
         expect(churchUser.church.zipCode).toBe(20500);
     });
-    test('PUT /users/update/user with non-existant address should return 400: non-updated church', async() => {
-        const updateData = { address: "678 Nonexistant Street", city: "Nowhere", state: "Nostate", zipCode: 11111 };
+    test('PUT /users/update/user Church with non-existant address should return 400: non-updated church', async() => {
+        const updateData = { 
+            address: "678 Nonexistant Street", 
+            city: "Nowhere", 
+            state: "Nostate", 
+            zipCode: 11111 
+        };
         const res = await request.put('/users/update/user')
             .set("Authorization", `Bearer ${churchUser.accessToken}`)
             .send(updateData);
