@@ -1,11 +1,10 @@
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+    provider          = "mysql"
+    url               = env("DATABASE_URL")
     shadowDatabaseUrl = env("DATABASE_SHADOW_URL")
 }
 
 generator client {
-
     provider = "prisma-client-js"
 }
 
@@ -36,15 +35,15 @@ model RefreshToken {
 
 // A user account, which holds all unique data to a particular user
 model User {
-    id             String   @id @default(uuid()) @db.VarChar(255)
-    email          String   @unique @db.VarChar(255)
-    passwordHash   String
-    userType       UserType
+    id           String   @id @default(uuid()) @db.VarChar(255)
+    email        String   @unique @db.VarChar(255)
+    passwordHash String
+    userType     UserType
 
     photoUrl String? @db.VarChar(255)
 
-    confirmedEmail      Boolean  @default(false)
-    confirmedEmailRoute String? @db.VarChar(64) @unique
+    confirmedEmail      Boolean @default(false)
+    confirmedEmailRoute String? @unique @db.VarChar(64)
     replacementEmail    String? @db.VarChar(255)
 
     aboutMe String @db.VarChar(1024)
@@ -64,10 +63,16 @@ model User {
 model Church {
 
     userId String @id @db.VarChar(255)
-    user   User?  @relation(fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    name    String
-    address String?
+    name    String @db.VarChar(127)
+    address String @db.VarChar(127)
+    city    String @db.VarChar(127)
+    state   String @db.VarChar(127)
+    zipCode Int
+
+    locationLat  Float @db.Float
+    locationLong Float @db.Float
 
     // All ReviewAnswers that various users have given
     // regarding this Church
@@ -80,7 +85,7 @@ model Church {
 model Individual {
 
     userId String @id @db.VarChar(255)
-    user   User?  @relation(fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     firstName String
     lastName  String
@@ -91,13 +96,11 @@ model Individual {
 }
 
 model QuizTemplate {
-
-    id Int @id @default(autoincrement())
+    id      Int                  @id @default(autoincrement())
     qToTemp QuestionToTemplate[]
 }
 
 model Question {
-
     id   Int    @id @default(autoincrement())
     text String @db.VarChar(255)
 
@@ -107,7 +110,6 @@ model Question {
 }
 
 model QuestionToTemplate {
-
     // What order is the question in the template?
     qIndex Int
 
@@ -122,7 +124,6 @@ model QuestionToTemplate {
 
 // An Account's unique answer to a quiz question
 model Answer {
-
     choice Int
 
     userId String @db.VarChar(255)
@@ -137,10 +138,9 @@ model Answer {
 // An Individual's (or anonymous user's) feedback on
 // a given Church
 model ChurchFeedback {
-
     id String @id @default(uuid()) @db.VarChar(255)
 
-    feedback String @db.VarChar(1024)
+    feedback String @db.VarChar(1023)
 
     churchUser   Church @relation(fields: [churchUserId], references: [userId])
     churchUserId String @db.VarChar(255)
@@ -152,7 +152,6 @@ model ChurchFeedback {
 // Connects an Individual's feedback to a
 // Church's Question / Answer.
 model ReviewAnswer {
-
     id String @id @default(uuid()) @db.VarChar(255)
 
     choice      Int

@@ -17,60 +17,56 @@ const refreshAccessToken = async (req: Request, res: Response, next: any) => {
     try { 
         const currentRefreshToken = req.cookies['refreshToken'];
         if(currentRefreshToken == null) 
-            return res.status(400).json('refreshToken cookie required to receive new access token.');
+            res.status(400).json('refreshToken cookie required to receive new access token.');
         
         const [accessToken, newRefreshToken] = await _checkAndGenTokens(currentRefreshToken, req.ip);
         res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
 
-        return res.status(200).json({ accessToken })
+        res.status(200).json({ accessToken })
     } catch(error) {
         if(error instanceof UserNotFoundError) {
-            return res.status(400).send("User did not match refresh token.");
+            res.status(400).send("User did not match refresh token.");
         } else if(error instanceof RevokedTokenError) {
-            return res.status(400).send("Revoked token error: please sign in again.");
+            res.status(400).send("Revoked token error: please sign in again.");
         } else if(error instanceof StaleTokenError) {
-            return res.status(400).send("Stale token error: please sign in again.");
+            res.status(400).send("Stale token error: please sign in again.");
         }
-        return next(error);
     }
 }
 
 const logout = async(req: Request, res: Response, next: any) => {
-    try {
-        const cookie = req.cookies['refreshToken'];
-        const currentRefreshToken = await prisma.refreshToken.findFirst({
-            where: { token: cookie },
-        });
+    const cookie = req.cookies['refreshToken'];
+    const currentRefreshToken = await prisma.refreshToken.findFirst({
+        where: { token: cookie },
+    });
 
-        if(currentRefreshToken != null)
-            _revokeRefreshToken(currentRefreshToken, req.ip);
+    if(currentRefreshToken != null)
+        _revokeRefreshToken(currentRefreshToken, req.ip);
 
-        res.clearCookie('refreshToken');
-        return res.status(200).send();
-    }   catch(error) { return next(error); }
+    res.clearCookie('refreshToken');
+    res.status(200).send();
 }
 
 const login = async(req: Request, res: Response, next: any) => {
-    try {
-        const { email, password } = req.body;
-        const user = await prisma.user.findFirst({
-            where: { email: email }
-        });
+    const { email, password } = req.body;
+    const user = await prisma.user.findFirst({
+        where: { email: email }
+    });
 
-        if(user != null) {
-            if(await bcrypt.compare(password, user.passwordHash)) {
-                const [accessToken, refreshToken] = [
-                    _generateAccessToken(user.id),
-                    await _generateRefreshToken(user, null, req.ip)
-                ];
+    if(user != null) {
+        if(await bcrypt.compare(password, user.passwordHash)) {
+            const [accessToken, refreshToken] = [
+                _generateAccessToken(user.id),
+                await _generateRefreshToken(user, null, req.ip)
+            ];
 
-                res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
-                return res.status(200).json({ accessToken });
-            }
+            res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
+            res.status(200).json({ accessToken });
+            return;
         }
+    }
 
-        res.status(400).send("Email/Password combination didn't match. Please try again.");
-    }   catch(error) { return next(error); }
+    res.status(400).send("Email/Password combination didn't match. Please try again."); 
 }
 // #endregion Exported Functions
 

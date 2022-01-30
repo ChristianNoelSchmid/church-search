@@ -1,4 +1,4 @@
-import { body, checkSchema } from "express-validator";
+import { body, checkSchema, param } from "express-validator";
 
 /**
  * Validates the parameters given for getting
@@ -6,7 +6,7 @@ import { body, checkSchema } from "express-validator";
  */
 function validateGetUser() {
     return [
-        body("userId").isInt()
+        param("userId").isString()
     ];
 }
 
@@ -47,6 +47,18 @@ function validateRegisterChurch() {
         "church.name": {
             isString: true,
             errorMessage: "Please provide a name"
+        },
+        "church.city": {
+            isString: true,
+            errorMessage: "Please provide a city"
+        },
+        "church.state": {
+            isString: true,
+            errorMessage: "Please provide a state"
+        },
+        "church.zipCode": {
+            isInt: true,
+            errorMessage: "Please provide a zip-code"
         },
         "church.address": {
             isString: true,

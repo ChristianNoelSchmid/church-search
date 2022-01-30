@@ -11,53 +11,61 @@ const userRouter = express.Router();
 // GET Read a user account
 userRouter.get('/:userId',
     userValidator.validateGetUser(), validate,
-    async (req: Request, res: Response, next: any) =>
-        await userController.getUser(req, res, next)
+    async (req: Request, res: Response, next: any) => {
+        try { await userController.getUser(req, res, next); } 
+        catch(error) { next(error); }
+    }
 );
 
 // POST Create an Individual User account
 userRouter.post('/create/indiv',
     userValidator.validateRegisterIndividual(), validate, 
-    async (req: Request, res: Response, next: any) =>
-        await userController.createIndivUser(req, res, next)
+    async (req: Request, res: Response, next: any) => {
+        try { await userController.createIndivUser(req, res, next); } 
+        catch(error) { next(error); }
+    }
 );
 
 // GET Confirm a User email address
 userRouter.get('/confirm-email/:emailRoute', 
-    async (req: Request, res: Response, next) =>
-        await userController.confirmEmail(req, res, next)
+    async (req: Request, res: Response, next) => {
+        try { await userController.confirmEmail(req, res, next); }
+        catch(error) { next(error); }
+    }
 );
 
 // POST Create a Church User account
 userRouter.post('/create/church', 
     userValidator.validateRegisterChurch(), validate, 
-    async (req: Request, res: Response, next: any) => 
-        await userController.createChurchUser(req, res, next) 
+    async (req: Request, res: Response, next: any) => {
+        try { await userController.createChurchUser(req, res, next); }
+        catch(error) { next(error); }
+    }
 );
 
 // PUT Update an Individual User account
-userRouter.put('/update/indiv',
-    async (req: Request, res: Response, next) => 
-        await userController.updateIndivUser(req, res, next) 
-);
-
-// PUT Update a Church User account
-userRouter.put('/update/church', 
-    async (req: Request, res: Response, next) => 
-        await userController.updateChurchUser(req, res, next)
+userRouter.put('/update/user',
+    async (req: Request, res: Response, next) => {
+        try { await userController.updateUser(req, res, next); }
+        catch(error) { next(error); }
+    }
 );
 
 // PUT Update a User email
 userRouter.put('/update/email',
     userValidator.validateUpdateEmail(), validate,
-    async(req: Request, res: Response, next: any) =>
-        await userController.updateUserEmail(req, res, next)
+    async(req: Request, res: Response, next: any) => {
+        try { await userController.updateUserEmail(req, res, next); }
+        catch(error) { next(error); }
+    }
 );
 
 userRouter.put('/update/password',
     userValidator.validateUpdatePassword(), validate,
-    async(req: Request, res: Response, next: any) => 
-        await userController.updateUserPassword(req, res, next)
+    async(req: Request, res: Response, next: any) => {
+        try { await userController.updateUserPassword(req, res, next); }
+        catch(error) { next(error); }
+    }
 );
 
 export { userRouter };
