@@ -1,4 +1,4 @@
-import supertest, { SuperTest, Test } from 'supertest';
+import supertest from 'supertest';
 import { app } from '../app';
 import { prisma } from '../client';
 import { Individual, User } from '@prisma/client';
