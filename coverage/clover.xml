@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1643579276912" clover="3.2.0">
-  <project timestamp="1643579276912" name="All files">
+<coverage generated="1643607315885" clover="3.2.0">
+  <project timestamp="1643607315885" name="All files">
     <metrics statements="14" coveredstatements="13" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0" elements="15" coveredelements="13" complexity="0" loc="14" ncloc="14" packages="1" files="2" classes="2"/>
     <file name="app.ts" path="/home/christian/Projects/church-search/src/app.ts">
       <metrics statements="13" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
