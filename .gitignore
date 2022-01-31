@@ -1,6 +1,7 @@
 # NEVER include the environment variable file
 .env
 
+coverage
 prisma/migrations
 node_modules
 .vscode
