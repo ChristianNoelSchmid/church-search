@@ -1,100 +1,86 @@
+import { Answer, Church, Question, User, UserType } from '@prisma/client';
 import { Request, Response } from 'express';
 import { prisma } from '../client';
 
-import { getQuizTemplate } from './quiz-controller';
+import * as quizService from '../services/quiz-service';
+
+type ChurchWithAnswers = (User & { answers: (Answer & { question: Question })[], church: Church | null }); 
+type ChurchUserScores = { church: Church & { answers: Answer[] }, match: number };
 
 // #region Exported Functions
-/**
- * Searches all users, individual and church
- */
-const searchUsers = async (req: Request, res: Response, next: any) => {
-    try {
-        const { searchParams } = req.body;
-        const users = await prisma.user.findMany({
-            where: { } // Query 
-        });
-    }   catch(error) { next(error); }
-}
-
 /**
  * Searches churches in the region using the individual's quiz
  * @returns The list of churchs' with their names, quiz scores, and match percentage
  */
 const searchChurches = async(req: Request, res: Response, next: any) => {
     try { 
-        const quiz = await _getUserQuiz(req, res);
-        if(quiz == null) return; 
-        
+        const questions = await quizService.getQuizQuestions();
+        const answers = await quizService.loadUserAnswers(req, res);
+ 
         // TODO - limit by geographical location - add Google Geocoding API
         const churchUsers = (await prisma.user.findMany({
             where: { 
-                userType: "Church",
+                userType: UserType.Church,
                 NOT: { answers: undefined, },
             },
             include: { 
                 church: true, 
-                answers: true 
+                answers: {
+                    where: { questionId: { 
+                        in: questions.map(q => q.id)
+                    } },
+                    include: { question: true },
+                }
             },
-        })).map(user => { return {
-            id: user.id,
-            name: user.church!.name,
-            scores: user.answers.split(':')
-                .map(score => Number.parseInt(score))
-        }});
+        }));
 
-        const churchUserScores = churchUsers.map(user => { return {
-            id: user.id,
-            name: user.name,
-            scores: user.scores,
-            match: _getMatchValue(quiz, user.scores)
-        }});
+        const churchUserScores = churchUsers.map(churchUser => { 
+            return {
+                church: churchUser.church,
+                match: _getMatchValue(answers, churchUser)
+            } as ChurchUserScores;
+        });
 
-        churchUserScores.sort(user => user.match);
-        return res.status(200).json({ churchUserScores });
+        churchUserScores.sort(score => score.match);
+        res.status(200).json({ churchUserScores });
 
     } catch (error) { 
         if(error instanceof UserSignedInAsChurchError)
-            return res.status(400).json({ msg: "This service cannot be used with church profiles." });
-        if(error instanceof QuizDoesNotExistError)
-            return res.status(404).json({ msg: "Please take the quiz or sign in." });
-        if(error instanceof MalformedQuizError) 
-            return res.status(400).json({ msg: "There was a problem parsing the quiz." });
-        return next(error); 
+            res.status(400).json({ msg: "This service cannot be used with church profiles." });
+        else if(error instanceof QuizDoesNotExistError)
+            res.status(404).json({ msg: "Please take the quiz or sign in." });
+        else if(error instanceof MalformedQuizError) 
+            res.status(400).json({ msg: "There was a problem parsing the quiz." });
+        else next(error); 
     }
 };
 // #endregion Exported Functions
 
 // #region Private Functions
-const _getUserQuiz = async (req: Request, res: Response): Promise<number[]> => {
+const _getMatchValue = (indivAnswers: Answer[], churchWithAnswers: ChurchWithAnswers): number => {
+    // The total match value (0%-100%)
+    let total = 0;
+    let answerCount = 0;
 
-    const quizTemplate = await getQuizTemplate();
-    let quizValues: string[];
-    if(req.userId) {
-        const user = req.user!;
-        const tempQuiz = await prisma.quiz.findFirst({
-            where: { userId: req.userId }
-        });
+    indivAnswers.forEach(answer => {
+        // Retrieve the matching Church Answer
+        const churchAnswer = churchWithAnswers.answers
+            .find(answer => answer.questionId = answer.questionId);
 
-        if(user.userType == "Church") throw new UserSignedInAsChurchError();        
-        if(tempQuiz == null) throw new QuizDoesNotExistError();
+        // If the Church has answered the given Question,
+        // add 100 divided by the ratio between the two Answers
+        if(churchAnswer != null) {
+            const difference = Math.abs(churchAnswer.choice - answer.choice);
+            const ratio = churchAnswer.question.max / (difference + 1);
+            // Plus one to avoid division by 0
 
-        quizValues = tempQuiz.answers.split(':');
-    } else {
-        if(req.cookies.quiz == null) throw new QuizDoesNotExistError();
-        quizValues = req.cookies.quiz!.split(':');
-    }
-
-    const quiz = quizValues.map(val => Number.parseInt(val));
-    if(quiz.some(val => Number.isNaN(val) || val < 0 || val > 5)) throw new MalformedQuizError();
-    if(quiz.length != quizTemplate.questions.split(':').length) throw new MalformedQuizError();
-
-    return quiz;
-}
-
-const _getMatchValue = (indivScores: number[], churchScores: number[]) => {
-    return indivScores.map((u, i) => [u, churchScores[i]]  )
-        .map(scores => 100 * (Math.abs(scores[0] - scores[1])) / 5)
-        .reduce((a, b) => a + b) / indivScores.length;
+            total += 100 * ratio; 
+            answerCount += 1;
+        }
+    });
+    // Finally, divide by the number of Answers considered
+    total /= answerCount;
+    return total;
 }
 // #endregion Private Functions
 
@@ -105,6 +91,5 @@ class MalformedQuizError extends Error { }
 // #endregion Errors
 
 export {
-    searchUsers,
     searchChurches,
 }

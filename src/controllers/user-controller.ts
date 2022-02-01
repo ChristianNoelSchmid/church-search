@@ -3,8 +3,8 @@ import { prisma } from '../client';
 import bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { requireAuthorization } from '../middleware/auth';
-import { Church, Individual, User, UserType } from '@prisma/client';
-import { getGeocodeLocation } from '../services/geocode';
+import { Church, Individual, Role, User, UserType } from '@prisma/client';
+import { getGeocodeLocation } from '../services/geocode-service';
 
 // #region Exported Functions
 /**
@@ -52,6 +52,7 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
             email: req.body.user.email,
             passwordHash: await _hashPassword(req.body.user.password),
             userType: UserType.Individual,
+            role: Role.User,
             aboutMe: req.body.user.aboutMe,
             confirmedEmailRoute: emailRoute,
 
@@ -103,6 +104,7 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
                 replacementEmail: req.body.user.email,
                 passwordHash: await _hashPassword(req.body.user.password),
                 userType: UserType.Church,
+                role: Role.User,
                 aboutMe: req.body.user.aboutMe,
                 confirmedEmailRoute: emailRoute,
                 
@@ -166,37 +168,35 @@ const confirmEmail = async (req: Request, res: Response, next: any) => {
 }
 
 const updateUserEmail = async (req: Request, res: Response, next: any) => {
-    requireAuthorization(req, res, async () => {
-        try {
-            const user = await prisma.user.findFirst({
-                where: { OR: [
-                    { email: req.body.email }, 
-                    { replacementEmail: req.body.email },
-                ]}
-            });
+    requireAuthorization(Role.User, async () => {
+        const user = await prisma.user.findFirst({
+            where: { OR: [
+                { email: req.body.email }, 
+                { replacementEmail: req.body.email },
+            ]}
+        });
 
-            if(user != null) {
-                return res.status(400).send("Email already taken.");
+        if(user != null) {
+            return res.status(400).send("Email already taken.");
+        }
+
+        const emailRoute = _generateEmailRoute();
+
+        await prisma.user.update({
+            where: { id: req.userId },
+            data: {
+                replacementEmail: req.body.email,
+                confirmedEmail: false,
+                confirmedEmailRoute: emailRoute,
             }
+        });
 
-            const emailRoute = _generateEmailRoute();
-
-            await prisma.user.update({
-                where: { id: req.userId },
-                data: {
-                    replacementEmail: req.body.email,
-                    confirmedEmail: false,
-                    confirmedEmailRoute: emailRoute,
-                }
-            });
-
-            return res.status(200).send("Updated. Please confirm email!");
-        } catch(error) { return next(error); }
+        return res.status(200).send("Updated. Please confirm email!");
     });
 }
 
 const updateUserPassword = async(req: Request, res: Response, next: any) => {
-    requireAuthorization(req, res, async() => {
+    requireAuthorization(Role.User, async() => {
         const user = await prisma.user.update({
             where: { id: req.userId },
             data: { passwordHash: await _hashPassword(req.body.password) }
@@ -210,7 +210,7 @@ const updateUserPassword = async(req: Request, res: Response, next: any) => {
  * based on the parameters given in the Request.
  */
 const updateUser = async (req: Request, res: Response, next: any) => {
-    requireAuthorization(req, res, async () => {
+    requireAuthorization(Role.User, async () => {
         const user = await prisma.user.findFirst({
             where: { id: req.userId },
             include: { indiv: true, church: true }

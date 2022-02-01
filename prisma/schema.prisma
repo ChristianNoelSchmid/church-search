@@ -14,6 +14,11 @@ enum UserType {
     Individual
 }
 
+enum Role {
+    User
+    Admin
+}
+
 // All relevant information needed to generate, validate,
 // and log the history of refresh tokens
 model RefreshToken {
@@ -35,10 +40,11 @@ model RefreshToken {
 
 // A user account, which holds all unique data to a particular user
 model User {
-    id           String   @id @default(uuid()) @db.VarChar(255)
-    email        String   @unique @db.VarChar(255)
+    id           String    @id @default(uuid()) @db.VarChar(255)
+    email        String    @unique @db.VarChar(255)
     passwordHash String
-    userType     UserType
+    userType     UserType? // Admin users do not have a UserType defined
+    role         Role
 
     photoUrl String? @db.VarChar(255)
 
@@ -103,6 +109,7 @@ model QuizTemplate {
 model Question {
     id   Int    @id @default(autoincrement())
     text String @db.VarChar(255)
+    max  Int
 
     qToTemp      QuestionToTemplate[]
     answers      Answer[]

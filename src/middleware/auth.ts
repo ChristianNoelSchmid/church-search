@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+import { Role } from '@prisma/client';
+import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../client';
 
@@ -44,11 +45,15 @@ const verifyToken = async (req: Request, res: Response, next: any) => {
     return next();
 };
 
-const requireAuthorization = (req: Request, res: Response, fn: () => any) => {
-    if(!req.userId) {
-        return res.status(401).send("Authorization required. Please log in.");
+const requireAuthorization = (role: Role, fn: () => any) => {
+    const [req, res] = [express.request, express.response];
+
+    // If the user is not logged in, or admin is required and the user is
+    // not admin, send a 401
+    if(!req.userId || (req.user?.role != role)) {
+        res.status(401).send("Authorization required. Please log in.");
     } else {
-        return fn();
+        fn();
     }
 }
 
