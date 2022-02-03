@@ -1,18 +1,18 @@
-import { Answer, Question } from "@prisma/client";
-import { Request, Response } from "express";
+import { Answer, Question, QuestionToTemplate, QuizTemplate } from "@prisma/client";
+import express from "express";
 import { prisma } from "../client";
 
 const getQuizQuestions = async (): Promise<Question[]> => {
     // Get the template Id from env
     const templateIdStr = process.env.QUIZ_TEMPLATE;
     if(templateIdStr == null) {
-        throw new QuizTemplateNotDefinedError();
+        throw new QuizTemplateNotChosenError();
     }
 
     // Parse the Id into an integer
     const templateId = Number.parseInt(templateIdStr);
     if(isNaN(templateId)) {
-        throw new QuizTemplateNotDefinedError();
+        throw new QuizTemplateNotChosenError();
     }
 
     // Return the template
@@ -27,12 +27,12 @@ const getQuizQuestions = async (): Promise<Question[]> => {
     const questions = qtt?.map(q => q.question);
 
     if(!questions)
-        throw new QuizTemplateNotDefinedError();
+        throw new QuizTemplateNotChosenError();
 
     return questions;
 }
-
-const loadUserAnswers = async (req: Request, res: Response): Promise<Answer[]> => {
+const loadUserAnswers = async (): Promise<Answer[]> => {
+    const req = express.request;
     const questions = await getQuizQuestions();
     if(req.userId) {
         const answers = (await prisma.answer.findMany({
@@ -60,7 +60,7 @@ const loadUserAnswers = async (req: Request, res: Response): Promise<Answer[]> =
     else return [];
 }
 
-class QuizTemplateNotDefinedError extends Error { }
+class QuizTemplateNotChosenError extends Error { }
 
 export {
     getQuizQuestions,

@@ -15,7 +15,7 @@ type ChurchUserScores = { church: Church & { answers: Answer[] }, match: number 
 const searchChurches = async(req: Request, res: Response, next: any) => {
     try { 
         const questions = await quizService.getQuizQuestions();
-        const answers = await quizService.loadUserAnswers(req, res);
+        const answers = await quizService.loadUserAnswers();
  
         // TODO - limit by geographical location - add Google Geocoding API
         const churchUsers = (await prisma.user.findMany({
@@ -71,7 +71,7 @@ const _getMatchValue = (indivAnswers: Answer[], churchWithAnswers: ChurchWithAns
         // add 100 divided by the ratio between the two Answers
         if(churchAnswer != null) {
             const difference = Math.abs(churchAnswer.choice - answer.choice);
-            const ratio = churchAnswer.question.max / (difference + 1);
+            const ratio = churchAnswer.question.choices.length / (difference + 1);
             // Plus one to avoid division by 0
 
             total += 100 * ratio; 

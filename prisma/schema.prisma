@@ -109,7 +109,8 @@ model QuizTemplate {
 model Question {
     id   Int    @id @default(autoincrement())
     text String @db.VarChar(255)
-    max  Int
+
+    choices String @db.VarChar(255)
 
     qToTemp      QuestionToTemplate[]
     answers      Answer[]
@@ -121,10 +122,10 @@ model QuestionToTemplate {
     qIndex Int
 
     questionId Int
-    question   Question @relation(fields: [questionId], references: [id])
+    question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
     templateId Int
-    template   QuizTemplate @relation(fields: [templateId], references: [id])
+    template   QuizTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
     @@id([questionId, templateId], name: "id")
 }
@@ -134,10 +135,10 @@ model Answer {
     choice Int
 
     userId String @db.VarChar(255)
-    user   User   @relation(fields: [userId], references: [id])
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     questionId Int
-    question   Question @relation(fields: [questionId], references: [id])
+    question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
     @@id([userId, questionId], name: "id")
 }
@@ -149,10 +150,10 @@ model ChurchFeedback {
 
     feedback String @db.VarChar(1023)
 
-    churchUser   Church @relation(fields: [churchUserId], references: [userId])
+    churchUser   Church @relation(fields: [churchUserId], references: [userId], onDelete: Cascade)
     churchUserId String @db.VarChar(255)
 
-    indivUser   Individual? @relation(fields: [indivUserId], references: [userId])
+    indivUser   Individual? @relation(fields: [indivUserId], references: [userId], onDelete: Cascade)
     indivUserId String?     @db.VarChar(255)
 }
 
@@ -166,14 +167,14 @@ model ReviewAnswer {
     isAnonymous Boolean @default(true)
 
     // The Church being reviewed
-    churchUser   Church @relation(fields: [churchUserId], references: [userId])
+    churchUser   Church @relation(fields: [churchUserId], references: [userId], onDelete: Cascade)
     churchUserId String @db.VarChar(255)
 
     // The Individual giving the review
-    reviewerUser   Individual? @relation(fields: [reviewerUserId], references: [userId])
+    reviewerUser   Individual? @relation(fields: [reviewerUserId], references: [userId], onDelete: Cascade)
     reviewerUserId String?     @db.VarChar(255)
 
     // The specific Question being answered and commented on
     questionId Int
-    question   Question @relation(fields: [questionId], references: [id])
+    question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }

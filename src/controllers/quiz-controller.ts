@@ -79,7 +79,7 @@ const addAnswer = async (req: Request, res: Response, next: any) => {
         return res.status(200).send("Answer updated");
     }
 }
-// #endregion
+// #endregion Exported Functions
 
 export {
     getQuiz,
