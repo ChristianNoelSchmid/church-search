@@ -7,7 +7,7 @@ import { validate } from '../validation/validate';
 const adminRouter = express.Router();
 
 // POST create new quiz template
-adminRouter.post('/admin/template/create', 
+adminRouter.post('/template/create', 
     async (req: Request, res: Response, next: any) => {
         try { await adminController.createQuizTemplate(req, res); }
         catch(error) { next(error); }
@@ -15,7 +15,7 @@ adminRouter.post('/admin/template/create',
 );
 
 // POST duplicate quiz template
-adminRouter.post('/admin/template/duplicate',
+adminRouter.post('/template/duplicate',
     adminValidator.validateDuplicateTemplate(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.duplicateQuizTemplate(req, res); }
@@ -23,7 +23,7 @@ adminRouter.post('/admin/template/duplicate',
     }
 );
 
-adminRouter.post('/admin/question/create',
+adminRouter.post('/question/create',
     adminValidator.validateCreateQuestion(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.createNewQuestion(req, res); }
@@ -31,7 +31,7 @@ adminRouter.post('/admin/question/create',
     }
 );
 
-adminRouter.post('/admin/question/duplicate',
+adminRouter.post('/question/duplicate',
     adminValidator.validateDuplicateQuestion(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.duplicateQuestion(req, res); }
@@ -39,7 +39,7 @@ adminRouter.post('/admin/question/duplicate',
     }
 );
 
-adminRouter.put('/admin/question/add-to',
+adminRouter.put('/question/associate',
     adminValidator.validateAssociateQuestionToTemplate(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.associateQuestionToTemplate(req, res); }
@@ -47,7 +47,7 @@ adminRouter.put('/admin/question/add-to',
     }
 );
 
-adminRouter.put('/admin/question/update',
+adminRouter.put('/question/update',
     adminValidator.validateEditQuestion(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.editQuestion(req, res); }
@@ -55,7 +55,7 @@ adminRouter.put('/admin/question/update',
     }
 );
 
-adminRouter.delete('/admin/template/delete',
+adminRouter.delete('/template/delete',
     adminValidator.validateDeleteQuizTemplate(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.deleteQuizTemplate(req, res); }
@@ -63,7 +63,7 @@ adminRouter.delete('/admin/template/delete',
     }
 );
 
-adminRouter.delete('/admin/question/delete',
+adminRouter.delete('/question/delete',
     adminValidator.validateDeleteQuestion(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.deleteQuestion(req, res); }
@@ -71,10 +71,12 @@ adminRouter.delete('/admin/question/delete',
     }
 );
 
-adminRouter.put('/admin/question/remove-from',
+adminRouter.put('/question/remove-from',
     adminValidator.validateRemoveQuestionFromTemplate(), validate,
     async (req: Request, res: Response, next: any) => {
         try { await adminController.removeQuestionFromTemplate(req, res); }
         catch(error) { next(error); }
     }
 )
+
+export { adminRouter, }

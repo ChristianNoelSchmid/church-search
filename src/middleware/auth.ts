@@ -45,9 +45,7 @@ const verifyToken = async (req: Request, res: Response, next: any) => {
     return next();
 };
 
-const requireAuthorization = (role: Role, fn: () => any) => {
-    const [req, res] = [express.request, express.response];
-
+const requireAuthorization = (role: Role, req: Request, res: Response, fn: () => any) => {
     // If the user is not logged in, or admin is required and the user is
     // not admin, send a 401
     if(!req.userId || (req.user?.role != role)) {

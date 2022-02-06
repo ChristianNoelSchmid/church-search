@@ -168,7 +168,7 @@ const confirmEmail = async (req: Request, res: Response, next: any) => {
 }
 
 const updateUserEmail = async (req: Request, res: Response, next: any) => {
-    requireAuthorization(Role.User, async () => {
+    requireAuthorization(Role.User, req, res, async () => {
         const user = await prisma.user.findFirst({
             where: { OR: [
                 { email: req.body.email }, 
@@ -196,7 +196,7 @@ const updateUserEmail = async (req: Request, res: Response, next: any) => {
 }
 
 const updateUserPassword = async(req: Request, res: Response, next: any) => {
-    requireAuthorization(Role.User, async() => {
+    requireAuthorization(Role.User, req, res, async() => {
         const user = await prisma.user.update({
             where: { id: req.userId },
             data: { passwordHash: await _hashPassword(req.body.password) }
@@ -210,7 +210,7 @@ const updateUserPassword = async(req: Request, res: Response, next: any) => {
  * based on the parameters given in the Request.
  */
 const updateUser = async (req: Request, res: Response, next: any) => {
-    requireAuthorization(Role.User, async () => {
+    requireAuthorization(Role.User, req, res, async () => {
         const user = await prisma.user.findFirst({
             where: { id: req.userId },
             include: { indiv: true, church: true }

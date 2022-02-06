@@ -10,7 +10,7 @@ type QuizTemplateWithQuestions = QuizTemplate & { qToTemp: QuestionToTemplate[] 
  * Creates a new QuizTemplate, from scratch
  */
 const createQuizTemplate = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         const template = await _generateQuizTemplate();
         return res.status(201).json({ quizTemplate: template });
     });
@@ -22,9 +22,14 @@ const createQuizTemplate = async (req: Request, res: Response) => {
  * references. Does not duplicate the Questions
  */
 const duplicateQuizTemplate = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
-        const template = await _generateQuizTemplate(req.body.templateId);
-        return res.status(201).json({ quizTemplate: template });
+    requireAuthorization(Role.Admin, req, res, async () => {
+        const toDuplicate = await prisma.quizTemplate.findFirst({
+            where: { id: req.body.templateId },
+            include: { qToTemp: true },
+        });
+        if(toDuplicate == null) throw new QuizTemplateDoesNotExistError();
+        const quizTemplate = await _generateQuizTemplate(toDuplicate);
+        return res.status(201).json({ quizTemplate });
     });
 }
 
@@ -32,7 +37,7 @@ const duplicateQuizTemplate = async (req: Request, res: Response) => {
  * Creates a new Question, associated with a QuestionTemplate
  */
 const createNewQuestion = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         const question = await _createQuestion(
             req.body.text, req.body.choices.join(":"),
             req.body.templateId
@@ -46,7 +51,7 @@ const createNewQuestion = async (req: Request, res: Response) => {
  * with the same data.
  */
 const duplicateQuestion = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         const question = await _duplicateQuestion(
             req.body.questionId, req.body.templateId
         );
@@ -60,7 +65,7 @@ const duplicateQuestion = async (req: Request, res: Response) => {
  * QuizTemplate, changes the order by qIndex
  */
 const associateQuestionToTemplate = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         const question = await _associateQuestionToTemplate(
             req.body.questionId,  req.body.templateId, req.body.qIndex
         );
@@ -69,7 +74,7 @@ const associateQuestionToTemplate = async (req: Request, res: Response) => {
 };
 
 const editQuestion = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         const question = await prisma.question.update({
             where: { id: req.body.questionId, },
             data: {
@@ -83,21 +88,21 @@ const editQuestion = async (req: Request, res: Response) => {
 }
 
 const deleteQuizTemplate = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         await _deleteQuizTemplate(req.body.templateId, req.body.deleteReferences ?? false);
         res.status(200).send("Deleted");
     });
 }
 
 const deleteQuestion = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         await _deleteQuestion(req.body.questionId);
         res.status(200).send("Deleted");
     });
 }
 
 const removeQuestionFromTemplate = async (req: Request, res: Response) => {
-    requireAuthorization(Role.Admin, async () => {
+    requireAuthorization(Role.Admin, req, res, async () => {
         await _removeQuestionFromTemplate(req.body.templateId, req.body.questionId);
         res.status(200).send("Deleted");
     });
@@ -137,65 +142,52 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
         where: { id: templateId },
         include: { qToTemp: { orderBy: { qIndex: "asc" } } },
     });
+    const question = await prisma.question.findFirst({
+        where: { id: questionId }
+    });
     if(template == null) throw new QuizTemplateDoesNotExistError();
+    if(question == null) throw new QuestionDoesNotExistError();
 
     // If qIndex isn't defined, set it to the length of items in the template
-    // (to be adjusted below)
     if(!qIndex) qIndex = template.qToTemp.length;
-
-    // Ensure qIndex is between 0..template.qToTemp length if the Question is not
-    // yet in the list (aka, adding a new Question to the template), and
-    // 0..template.qToTemp length - 1 if it is.
-    if(template.qToTemp.some(qtt => qtt.questionId == questionId)) {
-        qIndex = Math.min(qIndex, template.qToTemp.length - 1);
-    } else {
-        qIndex = Math.min(qIndex, template.qToTemp.length);
-    }
+    qIndex = Math.min(qIndex, template.qToTemp.length);
     qIndex = Math.max(qIndex, 0);
 
     // Determine if the Question is already associated with the given QuizTemplate
-    let qtt = template.qToTemp.find(qtt => qtt.questionId == questionId);
-
+    let qtt = template.qToTemp.find(q => q.questionId == question.id);
+    
     // If the Question already exists in the template shift all questions
-    // to the right of the moved Question left by 1
-    if(qtt) {
-        _updateUpperQIndices(qtt, template);
-    }
-    // Shift every QuestionToTemplate that has qIndex >= new Question's qIndex up 1
-    for(let i = qIndex; i < template.qToTemp.length; ++i) {
-        await prisma.questionToTemplate.update({
-            where: { id: { 
-                questionId: template.qToTemp[i].questionId,
-                templateId: template.qToTemp[i].templateId 
-            } },
-            data: {
-                qIndex: i + 1
-            },
-        });
-    }
+    // to the right of the QuestionToTemplate down
+    if(qtt) await _shiftUpperQIndicesDown(qtt.qIndex, template.id);
+
+    // Shift every QuestionToTemplate to the right of the new qIndex up
+    await _shiftUpperQIndicesUp(qIndex, template.id);
+
+    // Adjust qIndex so that it is, at most, the greatest index in the QuestionTemplate
+    // if the Question already exists in the template
+    if(qtt) qIndex = Math.min(qIndex, template.qToTemp.length - 1);
 
     await prisma.questionToTemplate.upsert({
-        where:  { id: { questionId, templateId, } },
-        create: { qIndex, questionId, templateId, },
-        update: { qIndex  },
+        where:  { id: { templateId, questionId } },
+        create: { templateId, questionId, qIndex },
+        update: { qIndex },
     });
+
+    return question;
 }
 
 const _createQuestion = async (text: string, choices: string, templateId: number | undefined = undefined): Promise<Question> => {
-    const template = await prisma.quizTemplate.findFirst({
-        where: { id: templateId },
-        include: { qToTemp: true },
-    });
-    if(template == null) throw new QuizTemplateDoesNotExistError(); 
-
     const question = await prisma.question.create({
         data: { text, choices }
     });
 
     if(templateId) {
-        await prisma.questionToTemplate.create({
-            data: { templateId, questionId: question.id, qIndex: template.qToTemp.length }
-        });
+        try {
+            await _associateQuestionToTemplate(question.id, templateId);
+        } catch(error) {
+            await prisma.question.delete({ where: { id: question.id } });
+            throw error;
+        }
     }
 
     return question;
@@ -212,9 +204,7 @@ const _duplicateQuestion = async (questionId: number, templateId: number | undef
     // and the Question is already associated with the QuizTemplate
     if(!questionToDuplicate) {
         throw new QuestionDoesNotExistError();
-    } else if(questionToDuplicate.qToTemp.some(qtt => qtt.templateId == templateId)) {
-        throw new QuestionAlreadyDefinedOnTemplateError();
-    } 
+    }
 
     // Duplicate the Question
     const newQuestion = await prisma.question.create({
@@ -227,8 +217,15 @@ const _duplicateQuestion = async (questionId: number, templateId: number | undef
     // If there is a templateId given, associate the Question
     // to the QuizTemplate
     if(templateId) {
-        _associateQuestionToTemplate(newQuestion.id, templateId);
+        try {
+            _associateQuestionToTemplate(newQuestion.id, templateId);
+        } catch(error) {
+            await prisma.question.delete({ where: { id: newQuestion.id } });
+            throw error;
+        }
     }
+
+    return newQuestion;
 }
 
 const _deleteQuizTemplate = async (id: number, deleteReferences: boolean) => {
@@ -253,8 +250,8 @@ const _deleteQuestion = async (questionId: number) => {
     });
 
     if(removedQuestion != null) {
-        removedQuestion.qToTemp.forEach(qtt => {
-            _updateUpperQIndices(qtt, qtt.template);
+        removedQuestion.qToTemp.forEach(async qtt => {
+            await _shiftUpperQIndicesDown(qtt.qIndex, qtt.template.id);
         })
     }
 }
@@ -266,25 +263,43 @@ const _removeQuestionFromTemplate = async (templateId: number, questionId: numbe
     });
 
     if(removedQtt != null) {
-        await _updateUpperQIndices(removedQtt, removedQtt.template);
+        await _shiftUpperQIndicesDown(removedQtt.qIndex, removedQtt.template.id);
     }
 }
 
 // Shifts all qIndices of the given quiz template that come after the removed
 // qIndex left, thereby fixing the gap between indices. 
-const _updateUpperQIndices = async (removedQtt: QuestionToTemplate, template: QuizTemplateWithQuestions) => {
-    for(let i = removedQtt.qIndex + 1; i < template.qToTemp.length; ++i) {
-        const qtt = template.qToTemp[i];
-        await prisma.questionToTemplate.update({
-            where: { id: { questionId: qtt.questionId, templateId: qtt.templateId } },
-            data: { qIndex: qtt.qIndex - 1 },
-        });
+const _shiftUpperQIndicesUp = async (qIndex: number, templateId: number) => {
+
+    // Find the max qIndex, beginning the traversal there
+    let index = (await prisma.questionToTemplate.aggregate({
+        where: { templateId: templateId },
+        _max: { qIndex: true }
+    }))._max.qIndex;
+
+    if(index != null) {
+        while(index >= qIndex && (
+            await prisma.questionToTemplate.updateMany({
+                where: { templateId, qIndex: index },
+                data: { qIndex: index + 1 }
+            })
+        ).count > 0)
+            index -= 1;
     }
+}
+const _shiftUpperQIndicesDown = async (qIndex: number, templateId: number) => {
+    let index = qIndex;
+    while((
+        await prisma.questionToTemplate.updateMany({
+            where: { templateId, qIndex: index },
+            data: { qIndex: index - 1 }
+        })
+    ).count > 0)
+        index += 1;
 }
 // #endregion Private Functions
 
 class QuizTemplateDoesNotExistError extends Error { }
-class QuestionAlreadyDefinedOnTemplateError extends Error { }
 class QuestionDoesNotExistError extends Error { }
 
 export {

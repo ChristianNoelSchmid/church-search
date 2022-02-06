@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 import { verifyToken } from './middleware/auth';
+import { adminRouter } from './routes/admin-router';
 import { authRouter } from './routes/auth-router';
 import { userRouter } from './routes/user-router';
 import { quizRouter } from './routes/quiz-router';
@@ -21,6 +22,7 @@ app.use(cookieParser());
 app.use(verifyToken);
 
 // Routing Middleware
+app.use('/admin', adminRouter);
 app.use('/auth', authRouter);
 app.use('/users', userRouter);
 app.use('/quiz', quizRouter);

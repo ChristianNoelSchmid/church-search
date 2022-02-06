@@ -52,7 +52,8 @@ model User {
     confirmedEmailRoute String? @unique @db.VarChar(64)
     replacementEmail    String? @db.VarChar(255)
 
-    aboutMe String @db.VarChar(1024)
+    aboutMe   String   @db.VarChar(1024)
+    createdOn DateTime @default(now())
 
     // The User's personal profile. One of these
     // will be populated, depending on the UserType
@@ -102,8 +103,9 @@ model Individual {
 }
 
 model QuizTemplate {
-    id      Int                  @id @default(autoincrement())
-    qToTemp QuestionToTemplate[]
+    id        Int                  @id @default(autoincrement())
+    qToTemp   QuestionToTemplate[]
+    createdOn DateTime             @default(now())
 }
 
 model Question {
@@ -115,6 +117,7 @@ model Question {
     qToTemp      QuestionToTemplate[]
     answers      Answer[]
     ReviewAnswer ReviewAnswer[]
+    createdOn    DateTime             @default(now())
 }
 
 model QuestionToTemplate {
@@ -124,8 +127,9 @@ model QuestionToTemplate {
     questionId Int
     question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-    templateId Int
-    template   QuizTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+    templateId   Int
+    template     QuizTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+    associatedOn DateTime     @default(now())
 
     @@id([questionId, templateId], name: "id")
 }
@@ -139,6 +143,8 @@ model Answer {
 
     questionId Int
     question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+    createdOn DateTime @default(now())
 
     @@id([userId, questionId], name: "id")
 }
@@ -155,6 +161,8 @@ model ChurchFeedback {
 
     indivUser   Individual? @relation(fields: [indivUserId], references: [userId], onDelete: Cascade)
     indivUserId String?     @db.VarChar(255)
+
+    createdOn DateTime @default(now())
 }
 
 // Connects an Individual's feedback to a
@@ -165,6 +173,8 @@ model ReviewAnswer {
     choice      Int
     comment     String? @db.VarChar(255)
     isAnonymous Boolean @default(true)
+
+    createdOn DateTime @default(now())
 
     // The Church being reviewed
     churchUser   Church @relation(fields: [churchUserId], references: [userId], onDelete: Cascade)
