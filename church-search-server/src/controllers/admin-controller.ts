@@ -148,17 +148,22 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
     if(template == null) throw new QuizTemplateDoesNotExistError();
     if(question == null) throw new QuestionDoesNotExistError();
 
+    console.log("qIndex = " + qIndex);
     // If qIndex isn't defined, set it to the length of items in the template
-    if(!qIndex) qIndex = template.qToTemp.length;
+    if(qIndex == undefined) qIndex = template.qToTemp.length;
     qIndex = Math.min(qIndex, template.qToTemp.length);
     qIndex = Math.max(qIndex, 0);
 
     // Determine if the Question is already associated with the given QuizTemplate
     let qtt = template.qToTemp.find(q => q.questionId == question.id);
+
+    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
     
     // If the Question already exists in the template shift all questions
     // to the right of the QuestionToTemplate down
     if(qtt) await _shiftUpperQIndicesDown(qtt.qIndex, template.id);
+
+    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
 
     // Shift every QuestionToTemplate to the right of the new qIndex up
     await _shiftUpperQIndicesUp(qIndex, template.id);
@@ -172,6 +177,8 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
         create: { templateId, questionId, qIndex },
         update: { qIndex },
     });
+
+    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
 
     return question;
 }
@@ -270,32 +277,16 @@ const _removeQuestionFromTemplate = async (templateId: number, questionId: numbe
 // Shifts all qIndices of the given quiz template that come after the removed
 // qIndex left, thereby fixing the gap between indices. 
 const _shiftUpperQIndicesUp = async (qIndex: number, templateId: number) => {
-
-    // Find the max qIndex, beginning the traversal there
-    let index = (await prisma.questionToTemplate.aggregate({
-        where: { templateId: templateId },
-        _max: { qIndex: true }
-    }))._max.qIndex;
-
-    if(index != null) {
-        while(index >= qIndex && (
-            await prisma.questionToTemplate.updateMany({
-                where: { templateId, qIndex: index },
-                data: { qIndex: index + 1 }
-            })
-        ).count > 0)
-            index -= 1;
-    }
+    await prisma.questionToTemplate.updateMany({
+        where: { templateId, qIndex: { gte: qIndex } },
+        data: { qIndex: { increment: 1 } },
+    });
 }
 const _shiftUpperQIndicesDown = async (qIndex: number, templateId: number) => {
-    let index = qIndex;
-    while((
-        await prisma.questionToTemplate.updateMany({
-            where: { templateId, qIndex: index },
-            data: { qIndex: index - 1 }
-        })
-    ).count > 0)
-        index += 1;
+    await prisma.questionToTemplate.updateMany({
+        where: { templateId, qIndex: { gte: qIndex } },
+        data: { qIndex: { decrement: 1 } },
+    });
 }
 // #endregion Private Functions
 

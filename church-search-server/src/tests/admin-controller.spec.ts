@@ -72,7 +72,6 @@ describe('Admin Endpoints', () => {
             where: { id: quizTemplates[0].id, },
             include: { qToTemp: true, },
         });
-        console.log(template);
 
         expect(template?.qToTemp.length).toBe(3);
     });
@@ -108,19 +107,22 @@ describe('Admin Endpoints', () => {
         expect(questions[0].choices).toBe(questions[questions.length - 1].choices);
     });
     test('PUT /admin/question/associate adds a Question reference to a QuizTemplate', async () => {
+        // QTemplate 0 : order q0 q1 q2
+        // becomes order q1 q0 q2
         await request.put('/admin/question/associate')
             .set("Authorization", "bearer " + authToken)
             .send({ questionId: questions[0].id, templateId: quizTemplates[0].id, qIndex: 1 });
-        
+
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[1].id, templateId: quizTemplates[0].id }
+        }))?.qIndex).toBe(0);       
         expect((await prisma.questionToTemplate.findFirst({ 
             where: { questionId: questions[0].id, templateId: quizTemplates[0].id }
         }))?.qIndex).toBe(1);
         expect((await prisma.questionToTemplate.findFirst({ 
-            where: { questionId: questions[1].id, templateId: quizTemplates[0].id }
-        }))?.qIndex).toBe(0);
-        expect((await prisma.questionToTemplate.findFirst({ 
             where: { questionId: questions[2].id, templateId: quizTemplates[0].id }
         }))?.qIndex).toBe(2);  
+
 
         await request.put('/admin/question/associate')
             .set("Authorization", "bearer " + authToken)
@@ -138,7 +140,41 @@ describe('Admin Endpoints', () => {
         expect((await prisma.questionToTemplate.findFirst({ 
             where: { questionId: questions[2].id, templateId: quizTemplates[1].id }
         }))?.qIndex).toBe(3);  
+
+        await request.put('/admin/question/associate')
+            .set("Authorization", "bearer " + authToken)
+            .send({ questionId: questions[1].id, templateId: quizTemplates[0].id, qIndex: 0 });
+
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[1].id, templateId: quizTemplates[0].id }
+        }))?.qIndex).toBe(0);
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[0].id, templateId: quizTemplates[0].id }
+        }))?.qIndex).toBe(1);
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[2].id, templateId: quizTemplates[0].id }
+        }))?.qIndex).toBe(2);  
+
+
+        await request.put('/admin/question/associate')
+            .set("Authorization", "bearer " + authToken)
+            .send({ questionId: questions[0].id, templateId: quizTemplates[1].id, qIndex: 0 });
+
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[0].id, templateId: quizTemplates[1].id }
+        }))?.qIndex).toBe(0);
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[1].id, templateId: quizTemplates[1].id }
+        }))?.qIndex).toBe(1);
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[3].id, templateId: quizTemplates[1].id }
+        }))?.qIndex).toBe(2);  
+        expect((await prisma.questionToTemplate.findFirst({ 
+            where: { questionId: questions[2].id, templateId: quizTemplates[1].id }
+        }))?.qIndex).toBe(3);  
     });
+
+    test('')
 
     afterAll(async () => {
         await prisma.user.delete({ where: { email: "chris@mail.com" } });
