@@ -1,0 +1,42 @@
+<form method="POST">
+    <div class="form-group">
+        <label for="register-email">Email: </label>
+        <input class='form-control' [formControl]="emailControl" id="register-email" type="email" placeholder="Enter your email">
+    </div>
+
+    <div class="row">
+        <div class="form-group {{ showPassword ? 'col-md-12' : 'col-md-6' }}">
+            <label for="register-password">Password: </label>
+            <input class='form-control' [formControl]="passwordControl" id="register-password" type="{{ showPassword ? 'text' : 'password' }}" placeholder="Enter a password">
+            <small class="show-password">Show Password?</small><input (change)="showPassword = !showPassword" type="checkbox">     
+        </div>
+        <div class="form-group col-md-6" *ngIf="!showPassword">
+            <label for="register-confirm-password">Confirm Password: </label>
+            <input class='form-control' [formControl]="confirmPasswordControl" id="register-confirm-password" type="password" placeholder="Enter confirmation password">
+        </div>
+    </div>
+
+    <h2 class="text-center">I am...</h2>
+    <div class="row">
+        <div class="form-group col-6">
+            <input id="am-church" type="radio" name="am-choice" (change)="userType='church'">
+            <label for="am-church" class="px-2 font-large">a church</label>
+        </div>
+        <div class="form-group col-6">
+            <input id="am-individual" type="radio" name="am-choice" (change)="userType='individual'">
+            <label for="am-individual" class="px-2 font-large">an individual</label>
+        </div>
+    </div>
+
+    <app-individual-info-form *ngIf="userType == 'individual'"></app-individual-info-form>
+    <app-church-info-form *ngIf="userType == 'church'"></app-church-info-form>
+
+    <div class="form-group">
+        <label for="register-about">About: </label>
+        <textarea class='form-control' [formControl]="aboutControl" id="register-about" placeholder="Enter a little about you"></textarea>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Register</button>
+    </div>
+</form>
