@@ -1,25 +1,26 @@
-<div class="form-group">
-    <label for="register-name">Name: </label>
-    <input class='form-control' formControlName="name" id="register-name" type="text" placeholder="Enter your church's name">
-</div>
-<div class="form-group">
-    <label for="register-address">Street Address: </label>
-    <input class='form-control' formControlName="address" id="register-address" type="text" placeholder="Enter church's address">
-</div>
-<div class="row">
-    <div class="form-group col-md-4">
-        <label for="register-city">City: </label>
-        <input class='form-control' formControlName="city" id="register-city" type="text" placeholder="Enter your church's city / town">
+<div [formGroup]="formGroup">
+    <div class="form-group">
+        <label for="register-name">Name: </label>
+        <input class='form-control' formControlName="name" id="register-name" type="text" placeholder="Enter your church's name">
     </div>
-    <div class="form-group col-md-4">
-        <label for="register-state">State: </label>
-        <select class='form-control' formControlName="state" id="register-state">
-            <option *ngFor="let state of states; let i=index" value="i - 1" label="{{ state.full }} ({{ state.abbr }})"></option>
-        </select>
+    <div class="form-group">
+        <label for="register-address">Street Address: </label>
+        <input class='form-control' formControlName="address" id="register-address" type="text" placeholder="Enter church's address">
     </div>
-    <div class="form-group col-md-4">
-        <label for="register-zip">Zip Code: </label>
-        <input class='form-control' formControlName="zipCode" id="register-zip" type="number" placeholder="Enter your church's zip code">
+    <div class="row">
+        <div class="form-group col-md-4">
+            <label for="register-city">City: </label>
+            <input class='form-control' formControlName="city" id="register-city" type="text" placeholder="Enter your church's city / town">
+        </div>
+        <div class="form-group col-md-4">
+            <label for="register-state">State: </label>
+            <select class='form-control' formControlName="state" id="register-state">
+                <option *ngFor="let state of states; let i=index" value="{{ i - 1 }}" label="{{ state.full }} ({{ state.abbr }})"></option>
+            </select>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="register-zip">Zip Code: </label>
+            <input class='form-control' formControlName="zipCode" id="register-zip" type="number" placeholder="Enter your church's zip code">
+    </div>
     </div>
 </div>
-

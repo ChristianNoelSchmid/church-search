@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
@@ -8,6 +8,8 @@ import { FormControl, FormGroup } from '@angular/forms';
 })
 export class IndividualInfoFormComponent implements OnInit {
 
+  @Output() public valueChanges = new EventEmitter<object>();
+
   public formGroup = new FormGroup({
     firstName: new FormControl(""),
     lastName: new FormControl("")
@@ -16,6 +18,9 @@ export class IndividualInfoFormComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.formGroup.valueChanges.subscribe(() => 
+      this.valueChanges.emit(this.formGroup.value)
+    );
   }
 
 }

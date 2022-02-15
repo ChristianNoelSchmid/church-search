@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -62,6 +62,8 @@ export class ChurchInfoFormComponent implements OnInit {
     { full: "Wyoming", abbr: "WY" }
   ];
 
+  @Output() public valueChanges = new EventEmitter<object>();
+
   public formGroup = new FormGroup({
     name: new FormControl(""),
     address: new FormControl(""),
@@ -73,6 +75,9 @@ export class ChurchInfoFormComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.formGroup.valueChanges.subscribe(() => {
+      this.valueChanges.emit(this.formGroup.value);
+    });
   }
 
 }

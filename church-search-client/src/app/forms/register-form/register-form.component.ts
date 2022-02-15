@@ -1,5 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-register-form',
@@ -7,21 +7,30 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['./register-form.component.css']
 })
 export class RegisterFormComponent implements OnInit {
-  
-  public emailControl = new FormControl("");
-  public passwordControl = new FormControl("");
-  public confirmPasswordControl = new FormControl("");
-  public aboutControl = new FormControl("");
+ 
+  public formGroup = new FormGroup({
+    email: new FormControl(""),
+    password: new FormControl(""),
+    confirmPassword: new FormControl(""),
+    about: new FormControl(""),
+  });
 
   public showPassword = false;
   public userType?: string;
+
+  public userInfo = {};
 
   constructor() { }
 
   ngOnInit(): void {
   }
 
-  public onBackToLoginPressed() {
+  public onSubmit() {
+    console.log({
+      user: this.formGroup.value,
+      indiv: this.userType == "individual" ? this.userInfo : undefined,
+      church: this.userType == "church" ? this.userInfo : undefined,
+    });
   }
 
 }
