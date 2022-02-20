@@ -1,11 +1,9 @@
 import { Answer, Church, Question, User, UserType } from '@prisma/client';
 import { Request, Response } from 'express';
 import { prisma } from '../client';
+import { ChurchUserScores, ChurchWithAnswers } from '../models';
 
 import * as quizService from '../services/quiz-service';
-
-type ChurchWithAnswers = (User & { answers: (Answer & { question: Question })[], church: Church | null }); 
-type ChurchUserScores = { church: Church & { answers: Answer[] }, match: number };
 
 // #region Exported Functions
 /**

@@ -6,6 +6,7 @@ import { RefreshToken, User } from '@prisma/client';
 
 import { TokenKeyNotDefinedError } from '../middleware/auth';
 import { prisma } from '../client';
+import { UserAndAccessToken } from '../models';
 
 // #region Exported Functions
 /** 
@@ -51,7 +52,7 @@ const login = async(req: Request, res: Response, next: any) => {
     const { email, password } = req.body;
     const user = await prisma.user.findFirst({
         where: { email: email }
-    });
+    }) as UserAndAccessToken;
 
     if(user != null) {
         if(await bcrypt.compare(password, user.passwordHash)) {
@@ -60,8 +61,14 @@ const login = async(req: Request, res: Response, next: any) => {
                 await _generateRefreshToken(user, null, req.ip)
             ];
 
+            user.accessToken = accessToken;
+            user.passwordHash = ""; // Remove the passwordHash before sending
+
+            // Set the refreshToken cookie
             res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
-            res.status(200).json({ accessToken });
+
+            // Return the user, with the access token
+            res.status(200).json({ user });
             return;
         }
     }

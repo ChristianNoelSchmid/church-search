@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from "express";
 import logger from "morgan";
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 import { verifyToken } from './middleware/auth';
 import { adminRouter } from './routes/admin-router';
@@ -16,6 +17,7 @@ const app: Application = express();
 
 // Body parsing Middleware
 app.use(logger('dev'));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

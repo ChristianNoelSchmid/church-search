@@ -1,9 +1,8 @@
-import { Question, QuestionToTemplate, QuizTemplate, Role } from "@prisma/client";
+import { Question, Role } from "@prisma/client";
 import { Request, Response } from "express";
 import { prisma } from "../client";
 import { requireAuthorization } from "../middleware/auth";
-
-type QuizTemplateWithQuestions = QuizTemplate & { qToTemp: QuestionToTemplate[] }
+import { QuizTemplateWithQuestions } from "../models";
 
 // #region Public Functions
 /**

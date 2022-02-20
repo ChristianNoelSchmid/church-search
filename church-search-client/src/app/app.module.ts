@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './core/app.component';
@@ -15,6 +16,7 @@ import { RegisterPageComponent } from './pages/register-page/register-page.compo
 import { LoginPageComponent } from './pages/login-page/login-page.component';
 import { ChurchInfoFormComponent } from './forms/church-info-form/church-info-form.component';
 import { IndividualInfoFormComponent } from './forms/individual-info-form/individual-info-form.component';
+
 
 @NgModule({
   declarations: [
@@ -34,6 +36,7 @@ import { IndividualInfoFormComponent } from './forms/individual-info-form/indivi
     AppRoutingModule,
     BrowserAnimationsModule,
     ReactiveFormsModule,
+    HttpClientModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
