@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, of, pipe, throwError } from 'rxjs';
-import { Individual, MessageType, User } from '../models';
+import { Individual, MessageType, User, UserAndAccessToken } from '../models';
 import { MessagesService } from './messages.service';
 
 @Injectable({
@@ -9,7 +9,7 @@ import { MessagesService } from './messages.service';
 })
 export class AuthService {
 
-  private _user: Observable<User | null> = of(null);
+  private _user: Observable<UserAndAccessToken | null> = of(null);
   public get user() { return this._user; }
 
   constructor(private http: HttpClient, private messages: MessagesService) { }
@@ -31,7 +31,7 @@ export class AuthService {
   }*/
 
   public loginUser(model: { email: string, password: string }) {
-    return this.http.post<User>('http://localhost:3000/auth/login', model)
+    return this.http.post<UserAndAccessToken>('http://localhost:3000/auth/login', model)
       .pipe(
         catchError(error => this.handleError(error, null)),
         pipe(user => this._user = user)

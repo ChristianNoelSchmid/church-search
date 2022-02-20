@@ -40,15 +40,15 @@ const searchChurches = async(req: Request, res: Response, next: any) => {
         });
 
         churchUserScores.sort(score => score.match);
-        res.status(200).json({ churchUserScores });
+        res.status(200).json(churchUserScores);
 
     } catch (error) { 
         if(error instanceof UserSignedInAsChurchError)
-            res.status(400).json({ msg: "This service cannot be used with church profiles." });
+            res.status(400).send("This service cannot be used with church profiles.");
         else if(error instanceof QuizDoesNotExistError)
-            res.status(404).json({ msg: "Please take the quiz or sign in." });
+            res.status(404).send("Please take the quiz or sign in.");
         else if(error instanceof MalformedQuizError) 
-            res.status(400).json({ msg: "There was a problem parsing the quiz." });
+            res.status(400).send("There was a problem parsing the quiz.");
         else next(error); 
     }
 };

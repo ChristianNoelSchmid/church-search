@@ -23,7 +23,7 @@ const refreshAccessToken = async (req: Request, res: Response, next: any) => {
         const [accessToken, newRefreshToken] = await _checkAndGenTokens(currentRefreshToken, req.ip);
         res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
 
-        res.status(200).json({ accessToken })
+        res.status(200).json(accessToken)
     } catch(error) {
         if(error instanceof UserNotFoundError) {
             res.status(400).send("User did not match refresh token.");
@@ -68,7 +68,7 @@ const login = async(req: Request, res: Response, next: any) => {
             res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
 
             // Return the user, with the access token
-            res.status(200).json({ user });
+            res.status(200).json(user);
             return;
         }
     }

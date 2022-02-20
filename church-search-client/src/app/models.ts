@@ -17,6 +17,7 @@ type Church = {
 };
 
 type User = {
+    id: string,
     email: string,
     aboutMe: string, 
     userType: UserType,
@@ -24,6 +25,10 @@ type User = {
     church: Church | undefined;
     indiv: Individual | undefined;
 };
+
+type UserAndAccessToken = User & {
+    accessToken: string,
+}
 
 enum MessageType {
     Info,
@@ -41,6 +46,7 @@ export {
     User,
     Individual,
     Church,
+    UserAndAccessToken,
     MessageType,
     BannerMessage,
 };

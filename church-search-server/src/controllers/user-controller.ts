@@ -65,7 +65,7 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
     });
 
     // Return a requery of the user with the individual info included
-    res.status(201).json({ user });
+    res.status(201).json(user);
 }
 
 /**
@@ -133,7 +133,7 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
 
         
         // Return a requery of the user with the church info included
-        res.status(201).json({ user });
+        res.status(201).json(user);
     }
 }
 

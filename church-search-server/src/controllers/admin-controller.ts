@@ -11,7 +11,7 @@ import { QuizTemplateWithQuestions } from "../models";
 const createQuizTemplate = async (req: Request, res: Response) => {
     requireAuthorization(Role.Admin, req, res, async () => {
         const template = await _generateQuizTemplate();
-        return res.status(201).json({ quizTemplate: template });
+        return res.status(201).json(template);
     });
 }
 
@@ -28,7 +28,7 @@ const duplicateQuizTemplate = async (req: Request, res: Response) => {
         });
         if(toDuplicate == null) throw new QuizTemplateDoesNotExistError();
         const quizTemplate = await _generateQuizTemplate(toDuplicate);
-        return res.status(201).json({ quizTemplate });
+        return res.status(201).json(quizTemplate);
     });
 }
 
@@ -41,7 +41,7 @@ const createNewQuestion = async (req: Request, res: Response) => {
             req.body.text, req.body.choices.join(":"),
             req.body.templateId
         );
-        res.status(201).json({ question });
+        res.status(201).json(question);
     });
 };
 
@@ -54,7 +54,7 @@ const duplicateQuestion = async (req: Request, res: Response) => {
         const question = await _duplicateQuestion(
             req.body.questionId, req.body.templateId
         );
-        res.status(201).json({ question });
+        res.status(201).json(question);
     });
 }
 
@@ -68,7 +68,7 @@ const associateQuestionToTemplate = async (req: Request, res: Response) => {
         const question = await _associateQuestionToTemplate(
             req.body.questionId,  req.body.templateId, req.body.qIndex
         );
-        res.status(200).json({ question });
+        res.status(200).json(question);
     });
 };
 
@@ -82,7 +82,7 @@ const editQuestion = async (req: Request, res: Response) => {
             },
         });
 
-        return res.status(200).json({ question });
+        return res.status(200).json(question);
     });
 }
 

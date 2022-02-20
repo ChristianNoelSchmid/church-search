@@ -8,7 +8,7 @@ const getQuiz = async (res: Response, next: any) => {
     try {
         // Get the current QuizTemplate, throwing an Error if it is not defined
         const questions = await quizService.getQuizQuestions();
-        return res.status(200).json({ questions });
+        return res.status(200).json(questions);
     } catch(error) { return next(error); }
 }
 
@@ -26,11 +26,11 @@ const getAnswers = async (req: Request, res: Response) => {
             include: { question: true },
         }));
 
-        return res.status(200).json({ answers });
+        return res.status(200).json(answers);
     } else if(req.cookies.quiz) {
-        return res.status(200).json({ answers: req.cookies.quiz.split(":") });
+        return res.status(200).json(req.cookies.quiz.split(":"));
     } else {
-        return res.status(200).json({ anwers: Array(questions.length).fill(undefined) })
+        return res.status(200).json(Array(questions.length).fill(undefined))
     }
 }
 
