@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, of, pipe, throwError } from 'rxjs';
-import { Individual, MessageType, User, UserAndAccessToken } from '../models';
+import { Individual, LoginData, MessageType, User, UserAndAccessToken } from '../models';
 import { MessagesService } from './messages.service';
 
 @Injectable({
@@ -30,11 +30,14 @@ export class AuthService {
       );
   }*/
 
-  public loginUser(model: { email: string, password: string }) {
-    return this.http.post<UserAndAccessToken>('http://localhost:3000/auth/login', model)
+  public loginUser(data: LoginData) {
+    return this.http.post<UserAndAccessToken>('http://localhost:3000/auth/login', data)
       .pipe(
         catchError(error => this.handleError(error, null)),
-        pipe(user => this._user = user)
+        pipe(user => {
+          this._user = user;
+          return this._user;
+        })
       );
   }
 

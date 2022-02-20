@@ -51,8 +51,14 @@ const logout = async(req: Request, res: Response, next: any) => {
 const login = async(req: Request, res: Response, next: any) => {
     const { email, password } = req.body;
     const user = await prisma.user.findFirst({
-        where: { email: email }
-    }) as UserAndAccessToken;
+        where: { email: email },
+        select: {
+            indiv: true, church: true, 
+            id: true, email: true, role: true, confirmedEmail: true, 
+            replacementEmail: true, photoUrl: true, passwordHash: true,
+            userType: true
+        }
+    }) as any;
 
     if(user != null) {
         if(await bcrypt.compare(password, user.passwordHash)) {
@@ -62,13 +68,10 @@ const login = async(req: Request, res: Response, next: any) => {
             ];
 
             user.accessToken = accessToken;
-            user.passwordHash = ""; // Remove the passwordHash before sending
-
-            // Set the refreshToken cookie
-            res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
+            if(user.passwordHash) delete user.passwordHash;
 
             // Return the user, with the access token
-            res.status(200).json(user);
+            res.status(200).json(user as UserAndAccessToken);
             return;
         }
     }
@@ -186,6 +189,7 @@ const _revokeRefreshToken = async (currentToken: RefreshToken, ipAddress: string
         });
     }
 }
+
 // #endregion Private Functions
 
 class UserNotFoundError extends Error { }

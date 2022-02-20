@@ -1,6 +1,6 @@
 enum UserType {
-    Individual,
-    Church,
+    Individual = "Individual",
+    Church = "Church",
 }
 
 type Individual = {
@@ -27,6 +27,8 @@ type User = {
 };
 
 type UserAndAccessToken = User & {
+    indiv: Individual | null,
+    church: Church | null,
     accessToken: string,
 }
 
@@ -41,6 +43,11 @@ type BannerMessage = {
     messageType: MessageType,
 };
 
+type LoginData = {
+    email: string,
+    password: string,
+}
+
 export {
     UserType,
     User,
@@ -49,4 +56,5 @@ export {
     UserAndAccessToken,
     MessageType,
     BannerMessage,
+    LoginData,
 };

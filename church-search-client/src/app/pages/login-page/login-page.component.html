@@ -1,8 +1,25 @@
 <section class="container form-box">
     <h1 class="text-center">Login</h1>
-    <app-login-form></app-login-form>
+
+    <form method="POST" [formGroup]="formGroup" (submit)="onSubmit()">
+        <div class="form-group">
+            <label for="login-email">Email: </label>
+            <input class='form-control' formControlName="email" id="login-email" type="email" placeholder="Enter email">
+        </div>
+
+        <div class="form-group">
+            <label for="login-password">Password: </label>
+            <input class='form-control' formControlName="password" id="login-password" type="password" placeholder="Enter password">
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Login</button>
+        </div>
+    </form>
+
     <aside class="register-aside">
         <p>Are you new to ChurchSearch?</p>
         <button class="btn btn-info" routerLink="/register">Register</button>
     </aside>
+    <p *ngIf="message">{{ message }}</p>
 </section>

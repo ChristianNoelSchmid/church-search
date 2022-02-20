@@ -16,8 +16,8 @@ dotenv.config();
 const app: Application = express();
 
 // Body parsing Middleware
-app.use(logger('dev'));
 app.use(cors());
+app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

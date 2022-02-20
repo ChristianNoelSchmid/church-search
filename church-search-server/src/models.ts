@@ -1,4 +1,4 @@
-import { Answer, Church, Question, QuestionToTemplate, QuizTemplate, User } from "@prisma/client"
+import { Answer, Church, Individual, Question, QuestionToTemplate, QuizTemplate, User } from "@prisma/client"
 
 type QuizTemplateWithQuestions = QuizTemplate & { 
     qToTemp: QuestionToTemplate[]
@@ -21,6 +21,8 @@ type ChurchUserScores = {
 };
 
 type UserAndAccessToken = User & {
+    church: Church | null,
+    indiv: Individual | null,
     accessToken: string
 }   
 

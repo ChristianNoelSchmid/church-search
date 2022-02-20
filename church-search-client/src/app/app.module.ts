@@ -10,7 +10,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavbarComponent } from './navbar/navbar.component';
 import { HomePageComponent } from './pages/home-page/home-page.component';
 import { AdminPageComponent } from './pages/admin-page/admin-page.component';
-import { LoginFormComponent } from './forms/login-form/login-form.component';
 import { RegisterFormComponent } from './forms/register-form/register-form.component';
 import { RegisterPageComponent } from './pages/register-page/register-page.component';
 import { LoginPageComponent } from './pages/login-page/login-page.component';
@@ -24,7 +23,6 @@ import { IndividualInfoFormComponent } from './forms/individual-info-form/indivi
     NavbarComponent,
     HomePageComponent,
     AdminPageComponent,
-    LoginFormComponent,
     RegisterFormComponent,
     RegisterPageComponent,
     LoginPageComponent,
