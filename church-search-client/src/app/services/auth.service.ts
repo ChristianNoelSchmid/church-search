@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, Observable, of, pipe, throwError } from 'rxjs';
-import { Individual, LoginData, MessageType, User, UserAndAccessToken } from '../models';
+import { catchError, map, Observable, of, pipe, tap, throwError } from 'rxjs';
+import { LoginData, MessageType, RegisterChurchData, RegisterIndividualData, UserAndAccessToken } from '../models';
 import { MessagesService } from './messages.service';
 
 @Injectable({
@@ -12,43 +12,52 @@ export class AuthService {
   private _user: Observable<UserAndAccessToken | null> = of(null);
   public get user() { return this._user; }
 
-  constructor(private http: HttpClient, private messages: MessagesService) { }
+  constructor(private http: HttpClient, private messagesService: MessagesService) { }
 
-  /*public registerIndividual(email: string, password: string, about: string, firstName: string, lastName: string) {
-    this.http.post<User>('localhost:3000/auth/register/indiv', model)
+  public registerIndividual(data: RegisterIndividualData): Observable<string | null> {
+    return this.http.post<string | null>('localhost:3000/auth/register/indiv', data)
       .pipe(
-        catchError(error => this.handleError(error, null)),
-        user => this._user = user
+        map(() => null),
+        catchError((error: HttpErrorResponse) => {
+          if(error.status == 400) return of(error.error);
+          return this.handleError(error, null);
+        }),
       );
   }
 
-  public registerChurch(model: ChurchUser) {
-    this.http.post<ChurchUser>('localhost:3000/auth/register/church', model)
+  public registerChurch(model: RegisterChurchData) {
+    this.http.post<string | null>('localhost:3000/auth/register/church', model)
       .pipe(
-        catchError(error => this.handleError(error, null)),
-        user => this._user = user
+        map(() => null),
+        catchError((error: HttpErrorResponse) => {
+          if(error.status == 400) return of(error.error);
+          return this.handleError(error, null)
+        }),
       );
-  }*/
+  }
 
-  public loginUser(data: LoginData) {
+  public loginUser(data: LoginData): Observable<string | null> {
     return this.http.post<UserAndAccessToken>('http://localhost:3000/auth/login', data)
       .pipe(
-        catchError(error => this.handleError(error, null)),
-        pipe(user => {
-          this._user = user;
-          return this._user;
-        })
+        tap(user => this._user = of(user)),
+        // If there was no Error, map to null
+        map(_ => null),
+        catchError((error: HttpErrorResponse) => {
+            if(error.status == 400) return of(error.error);
+            else return this.handleError(error, null);
+          }
+        ),
       );
   }
 
   private handleError<T>(error: HttpErrorResponse, returnValue: T) {
     if(error.status == 0) {
-      this.messages.queueMessage({ 
+      this.messagesService.queueMessage({ 
         messageType: MessageType.Error, 
         message: error.message 
       });
     } else {
-      this.messages.queueMessage({ 
+      this.messagesService.queueMessage({ 
         messageType: MessageType.Error, 
         message: "An error has occured. Please try again later."
       });

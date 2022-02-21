@@ -10,7 +10,7 @@ import { AuthService } from 'src/app/services/auth.service';
 })
 export class LoginPageComponent implements OnInit {
 
-  public message?: string;
+  public error?: string;
 
   public formGroup = new FormGroup({
     email: new FormControl(''),
@@ -23,14 +23,12 @@ export class LoginPageComponent implements OnInit {
   }
 
   onSubmit() {
-    this.authService.loginUser(this.formGroup.value).subscribe(() =>
-      this.authService.user.subscribe(
-        user => { 
-          if(user != null) {
-            this.message = `Hello, ${user?.userType == UserType.Individual ? user?.indiv.firstName : user?.church.name }!`;
-          }
-        }
-    ));
+    this.error = undefined;
+    this.authService.loginUser(this.formGroup.value).subscribe(message => {
+      if(message != null) {
+        this.error = message;
+      }
+    });
   }
 
 }

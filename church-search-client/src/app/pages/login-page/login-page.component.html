@@ -15,11 +15,12 @@
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Login</button>
         </div>
+
+        <div class="my-4 alert alert-danger" role="alert" *ngIf="error">{{ error }}</div>
     </form>
 
     <aside class="register-aside">
         <p>Are you new to ChurchSearch?</p>
         <button class="btn btn-info" routerLink="/register">Register</button>
     </aside>
-    <p *ngIf="message">{{ message }}</p>
 </section>

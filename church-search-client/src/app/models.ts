@@ -1,3 +1,4 @@
+
 enum UserType {
     Individual = "Individual",
     Church = "Church",
@@ -48,6 +49,35 @@ type LoginData = {
     password: string,
 }
 
+type RegisterIndividualData = {
+    user: {
+        email: string,
+        password: string,
+        confirmPassword: string,
+        aboutMe: string,
+    },
+    indiv: {
+        firstName: string,
+        lastName: string,
+    }
+}
+
+type RegisterChurchData = {
+    user: {
+        email: string,
+        password: string,
+        confirmPassword: string,
+        aboutMe: string
+    },
+    church: {
+        name: string,
+        address: string,
+        city: string,
+        state: string,
+        zipCode: number
+    }
+}
+
 export {
     UserType,
     User,
@@ -57,4 +87,6 @@ export {
     MessageType,
     BannerMessage,
     LoginData,
+    RegisterIndividualData,
+    RegisterChurchData,
 };

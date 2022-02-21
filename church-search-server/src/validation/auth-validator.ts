@@ -6,14 +6,14 @@ import { checkSchema } from "express-validator";
  */
 function validateLogin() {
     return checkSchema({
-        "email": {
+        /*"email": {
             isEmail: true,
             errorMessage: "Please supply a valid email"
         },
         "password": {
             isString: true,
             errorMessage: "Please supply a password"
-        },
+        },*/
     });
 }
 
