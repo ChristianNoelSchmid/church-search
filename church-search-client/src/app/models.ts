@@ -49,27 +49,18 @@ type LoginData = {
     password: string,
 }
 
-type RegisterIndividualData = {
+type RegisterData = {
     user: {
         email: string,
         password: string,
         confirmPassword: string,
         aboutMe: string,
     },
-    indiv: {
+    indiv?: {
         firstName: string,
         lastName: string,
-    }
-}
-
-type RegisterChurchData = {
-    user: {
-        email: string,
-        password: string,
-        confirmPassword: string,
-        aboutMe: string
     },
-    church: {
+    church?: {
         name: string,
         address: string,
         city: string,
@@ -87,6 +78,5 @@ export {
     MessageType,
     BannerMessage,
     LoginData,
-    RegisterIndividualData,
-    RegisterChurchData,
+    RegisterData
 };

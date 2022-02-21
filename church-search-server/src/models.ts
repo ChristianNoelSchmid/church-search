@@ -26,9 +26,12 @@ type UserAndAccessToken = User & {
     accessToken: string
 }   
 
+const sleep = (ms: number) => { return new Promise((resolve) => setTimeout(resolve, ms))}
+
 export {
     QuizTemplateWithQuestions,
     ChurchWithAnswers,
     ChurchUserScores,
     UserAndAccessToken,
+    sleep
 }

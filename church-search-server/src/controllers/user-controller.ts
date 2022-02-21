@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto';
 import { requireAuthorization } from '../middleware/auth';
 import { Church, Individual, Role, User, UserType } from '@prisma/client';
 import { getGeocodeLocation } from '../services/geocode-service';
+import { sleep } from '../models';
 
 // #region Exported Functions
 /**
@@ -33,6 +34,8 @@ const getUser = async (req: Request, res: Response, next: any) => {
  * @returns A json result of the new User, with it's Individual info
  */
 const createIndivUser = async (req: Request, res: Response, next: any) => {
+    await sleep(1000);
+
     // If the User already exists return BadRequest
     if(await prisma.user.findFirst({ 
         where: { OR: [ 
@@ -73,6 +76,8 @@ const createIndivUser = async (req: Request, res: Response, next: any) => {
  * @returns A json result of the new User, with it's Church info
  */
 const createChurchUser = async (req: Request, res: Response, next: any) => {
+    await sleep(1000);
+
     // If the User already exists return BadRequest
     if(
         await prisma.user.findFirst({ 

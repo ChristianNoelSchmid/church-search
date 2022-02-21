@@ -6,7 +6,7 @@ import { RefreshToken, User } from '@prisma/client';
 
 import { TokenKeyNotDefinedError } from '../middleware/auth';
 import { prisma } from '../client';
-import { UserAndAccessToken } from '../models';
+import { sleep, UserAndAccessToken } from '../models';
 
 // #region Exported Functions
 /** 
@@ -49,6 +49,8 @@ const logout = async(req: Request, res: Response, next: any) => {
 }
 
 const login = async(req: Request, res: Response, next: any) => {
+    await sleep(1000);
+
     const { email, password } = req.body;
     const user = await prisma.user.findFirst({
         where: { email: email },

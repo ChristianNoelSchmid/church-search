@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of, pipe, tap, throwError } from 'rxjs';
-import { LoginData, MessageType, RegisterChurchData, RegisterIndividualData, UserAndAccessToken } from '../models';
+import { LoginData, MessageType, UserAndAccessToken, RegisterData } from '../models';
 import { MessagesService } from './messages.service';
 
 @Injectable({
@@ -14,8 +14,9 @@ export class AuthService {
 
   constructor(private http: HttpClient, private messagesService: MessagesService) { }
 
-  public registerIndividual(data: RegisterIndividualData): Observable<string | null> {
-    return this.http.post<string | null>('localhost:3000/auth/register/indiv', data)
+  public registerIndividual(data: RegisterData): Observable<string | null> {
+    console.log(data);
+    return this.http.post<string | null>('http://localhost:3000/users/create/indiv', data)
       .pipe(
         map(() => null),
         catchError((error: HttpErrorResponse) => {
@@ -25,8 +26,8 @@ export class AuthService {
       );
   }
 
-  public registerChurch(model: RegisterChurchData) {
-    this.http.post<string | null>('localhost:3000/auth/register/church', model)
+  public registerChurch(model: RegisterData): Observable<string | null> {
+    return this.http.post<string | null>('http://localhost:3000/users/create/church', model)
       .pipe(
         map(() => null),
         catchError((error: HttpErrorResponse) => {
