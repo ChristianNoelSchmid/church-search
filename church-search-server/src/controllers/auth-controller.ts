@@ -36,6 +36,7 @@ const refreshAccessToken = async (req: Request, res: Response, next: any) => {
 }
 
 const logout = async(req: Request, res: Response, next: any) => {
+    await sleep(1000);
     const cookie = req.cookies['refreshToken'];
     const currentRefreshToken = await prisma.refreshToken.findFirst({
         where: { token: cookie },

@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, of, pipe, tap, throwError } from 'rxjs';
+import { catchError, map, Observable, of, pipe, ReplaySubject, tap, throwError } from 'rxjs';
 import { LoginData, MessageType, UserAndAccessToken, RegisterData } from '../models';
 import { MessagesService } from './messages.service';
 
@@ -9,8 +9,8 @@ import { MessagesService } from './messages.service';
 })
 export class AuthService {
 
-  private _user: Observable<UserAndAccessToken | null> = of(null);
-  public get user() { return this._user; }
+  private _user: ReplaySubject<UserAndAccessToken | null> = new ReplaySubject(1);
+  public get user() { return this._user.asObservable() };
 
   constructor(private http: HttpClient, private messagesService: MessagesService) { }
 
@@ -40,14 +40,23 @@ export class AuthService {
   public loginUser(data: LoginData): Observable<string | null> {
     return this.http.post<UserAndAccessToken>('http://localhost:3000/auth/login', data)
       .pipe(
-        tap(user => this._user = of(user)),
-        // If there was no Error, map to null
+        tap(user => this._user.next(user)),
         map(_ => null),
         catchError((error: HttpErrorResponse) => {
             if(error.status == 400) return of(error.error);
             else return this.handleError(error, null);
           }
         ),
+      );
+  }
+
+  public logoutUser(): Observable<string | null> {
+    return this.http.put<null>("http://localhost:3000/auth/logout", {})
+      .pipe(
+        tap(() => this._user.next(null)),
+        catchError((error: HttpErrorResponse) => {
+          return this.handleError(error, null);
+        })
       );
   }
 
