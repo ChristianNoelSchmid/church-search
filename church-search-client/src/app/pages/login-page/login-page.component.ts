@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginData, UserType } from 'src/app/models';
 import { AuthService } from 'src/app/services/auth.service';
@@ -15,8 +15,19 @@ export class LoginPageComponent implements OnInit {
   public loading = false;
 
   public formGroup = new FormGroup({
-    email: new FormControl(''),
-    password: new FormControl(''),
+    email: new FormControl('', {
+      validators: [
+        Validators.required,
+        Validators.email
+      ], 
+      updateOn: 'blur'
+    }),
+      password: new FormControl('', {
+        validators: [ 
+        Validators.required 
+      ],
+      updateOn: 'blur'
+    }),
   });
 
   constructor(private authService: AuthService, private router: Router) { }
@@ -25,6 +36,15 @@ export class LoginPageComponent implements OnInit {
   }
 
   onSubmit() {
+    let errorFound = false;
+    for(let k in Object.keys(this.formGroup.controls ?? {})) {
+      this.formGroup.controls[k].updateValueAndValidity();
+      if(this.formGroup.controls[k].errors != null)
+        errorFound = true;
+    }
+
+    if(errorFound) return;
+
     this.error = undefined;
     this.loading = true;
 
@@ -36,6 +56,10 @@ export class LoginPageComponent implements OnInit {
         this.router.navigate([".."]);
       }
     });
+  }
+
+  get email() {
+    return this.formGroup.get('email')!;
   }
 
 }
