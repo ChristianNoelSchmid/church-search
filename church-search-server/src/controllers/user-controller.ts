@@ -97,7 +97,9 @@ const createChurchUser = async (req: Request, res: Response, next: any) => {
     const emailRoute = _generateEmailRoute();
 
     // Generate the address' latitude and longitude
-    const loc = await getGeocodeLocation(church, res);
+    const loc = // await getGeocodeLocation(church, res);
+    //TODO - integrate geocode location again (requires Google Cloud console
+        { lat: 0, lng: 0 };
 
     if(loc == null) {
         res.status(400).send("Could not find given address.");
@@ -294,8 +296,10 @@ const _updateChurch = async (
         zipCode: req.body.zipCode ?? user?.church?.zipCode,
     };
 
-    // Get the geocode location of the new address
-    const loc = await getGeocodeLocation(userData, res);
+    // Generate the address' latitude and longitude
+    const loc = // await getGeocodeLocation(update, res);
+    //TODO - integrate geocode location again (requires Google Cloud console
+        { lat: 0, lng: 0 };
 
     // If the location was not found, do not update the Church
     // and inform the client

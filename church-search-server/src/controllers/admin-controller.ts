@@ -147,7 +147,6 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
     if(template == null) throw new QuizTemplateDoesNotExistError();
     if(question == null) throw new QuestionDoesNotExistError();
 
-    console.log("qIndex = " + qIndex);
     // If qIndex isn't defined, set it to the length of items in the template
     if(qIndex == undefined) qIndex = template.qToTemp.length;
     qIndex = Math.min(qIndex, template.qToTemp.length);
@@ -155,14 +154,10 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
 
     // Determine if the Question is already associated with the given QuizTemplate
     let qtt = template.qToTemp.find(q => q.questionId == question.id);
-
-    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
-    
+ 
     // If the Question already exists in the template shift all questions
     // to the right of the QuestionToTemplate down
     if(qtt) await _shiftUpperQIndicesDown(qtt.qIndex, template.id);
-
-    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
 
     // Shift every QuestionToTemplate to the right of the new qIndex up
     await _shiftUpperQIndicesUp(qIndex, template.id);
@@ -176,8 +171,6 @@ const _associateQuestionToTemplate = async (questionId: number, templateId: numb
         create: { templateId, questionId, qIndex },
         update: { qIndex },
     });
-
-    console.log(await prisma.questionToTemplate.findMany({where: { templateId: templateId }}));
 
     return question;
 }

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken'
@@ -14,11 +14,11 @@ import { sleep, UserAndAccessToken } from '../models';
  * and refresh token if the refresh token verifies.
  * If not, a specific error is thrown.
  */
-const refreshAccessToken = async (req: Request, res: Response, next: any) => {
+const refreshAccessToken = async (req: Request, res: Response, next: NextFunction) => {
     try { 
         const currentRefreshToken = req.cookies['refreshToken'];
         if(currentRefreshToken == null) 
-            res.status(400).json('refreshToken cookie required to receive new access token.');
+            return res.status(400).json('refreshToken cookie required to receive new access token.');
         
         const [accessToken, newRefreshToken] = await _checkAndGenTokens(currentRefreshToken, req.ip);
         res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
@@ -26,11 +26,11 @@ const refreshAccessToken = async (req: Request, res: Response, next: any) => {
         res.status(200).json(accessToken)
     } catch(error) {
         if(error instanceof UserNotFoundError) {
-            res.status(400).send("User did not match refresh token.");
+            return res.status(400).send("User did not match refresh token.");
         } else if(error instanceof RevokedTokenError) {
-            res.status(400).send("Revoked token error: please sign in again.");
+            return res.status(400).send("Revoked token error: please sign in again.");
         } else if(error instanceof StaleTokenError) {
-            res.status(400).send("Stale token error: please sign in again.");
+            return res.status(400).send("Stale token error: please sign in again.");
         }
     }
 }
@@ -46,7 +46,7 @@ const logout = async(req: Request, res: Response, next: any) => {
         _revokeRefreshToken(currentRefreshToken, req.ip);
 
     res.clearCookie('refreshToken');
-    res.status(200).send();
+    return res.status(200).send();
 }
 
 const login = async(req: Request, res: Response, next: any) => {
@@ -73,20 +73,22 @@ const login = async(req: Request, res: Response, next: any) => {
             user.accessToken = accessToken;
             if(user.passwordHash) delete user.passwordHash;
 
+            res.cookie("refreshToken", refreshToken.token, { httpOnly: true });
+
             // Return the user, with the access token
             res.status(200).json(user as UserAndAccessToken);
             return;
         }
     }
 
-    res.status(400).send("Email/Password combination didn't match. Please try again."); 
+    return res.status(400).send("Email/Password combination didn't match. Please try again."); 
 }
 // #endregion Exported Functions
 
 // #region Private Functions
 const _generateAccessToken = (userId: string): string => {
     if(process.env.TOKEN_KEY == undefined)
-        throw new TokenKeyNotDefinedError();
+        throw new TokenKeyNotDefinedError("No token key for the environment is declared");
 
     const token = jwt.sign(
         { userId }, process.env.TOKEN_KEY, {

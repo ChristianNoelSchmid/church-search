@@ -16,7 +16,7 @@ describe('Auth Endpoints', () => {
             indiv: { firstName: "Alexander", lastName: "Hamilton" },
         });
 
-        user = res.body.user;
+        user = res.body;
     });
     test('POST /auth/login login with valid credentials should result in a 200: return accessToken', async() => {
         const loginData = { email: 'hamilton@mail.com', password: 'password' };
@@ -24,7 +24,7 @@ describe('Auth Endpoints', () => {
         // Login
         const res = await request.post('/auth/login').send(loginData);
         expect(res.status).toBe(200);
-        expect(res.body).toHaveProperty("accessToken");
+        expect(res.body).toBeDefined;
 
         // Check the refreshToken cookie value
         refreshToken = res.headers["set-cookie"]
@@ -38,7 +38,7 @@ describe('Auth Endpoints', () => {
         expect(res.status).toBe(200);
 
         // A new token should be generated
-        expect(res.body).toHaveProperty("accessToken");
+        expect(res.body).toBeDefined();
         refreshToken = res.headers["set-cookie"]
             .find((h: string) => h.includes("refreshToken"));
 
@@ -56,7 +56,7 @@ describe('Auth Endpoints', () => {
         res = await request.post('/auth/refresh')
             .set("Cookie", previousRefreshToken);
         expect(res.status).toBe(400); 
-        expect(res.body).not.toHaveProperty("accessToken");
+        expect(res.body).toStrictEqual({});
 
         // Refresh with the new token, expecting 400
         await request.post('/auth/refresh')
@@ -97,12 +97,8 @@ describe('Auth Endpoints', () => {
         expect(res.status).toBe(400);
     });
     afterAll(async () => {
-        if(user) {
-            // After testing, delete the test User
-            await prisma.user.delete({ where: { id: user.id } })
-            await prisma.refreshToken.deleteMany({
-                where: { token: { not: "" }}
-            });
-        }
+        // After testing, delete the test User
+        await prisma.user.deleteMany({ where: { email: "hamilton@mail.com" } })
+        await prisma.refreshToken.deleteMany();
     });
 });

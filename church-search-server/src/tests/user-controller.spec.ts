@@ -2,13 +2,16 @@ import supertest from 'supertest';
 import { app } from '../app';
 import { prisma } from '../client';
 import { Church, Individual, User } from '@prisma/client';
+import { DefaultTransporter } from 'google-auth-library';
 
 let request = supertest(app);
 
 let indivUser: User & { indiv: Individual, accessToken: string | undefined };
 let churchUser: User & { church: Church, accessToken: string | undefined };
+let testStart: Date;
 
 describe('User Endpoints', () => {
+    beforeAll(() => testStart = new Date()),
     beforeEach(async () => {
         // If the test Inidividual has been created, login prior to
         // every test
@@ -39,9 +42,11 @@ describe('User Endpoints', () => {
         const userIndiv = _userIndivRegisterData();
         const res = await request.post('/users/create/indiv').send(userIndiv);
             expect(res.status).toBe(201);
-            expect(res.body).toHaveProperty("user");
+            expect(res.body).toHaveProperty("aboutMe");
+            expect(res.body).toHaveProperty("indiv");
+            expect(res.body).toHaveProperty("email");
 
-        indivUser = res.body.user;
+        indivUser = res.body;
     });
     test('POST /users/create/indiv with already defined email should return a 400', async() => {
         const userIndiv = _userIndivRegisterData();
@@ -80,7 +85,8 @@ describe('User Endpoints', () => {
                 await prisma.user.findFirst({ where: { email: "church@mail.com" } })
             ).toBe(null); // The user should not have been created
     });
-    test('POST users/create/church with non-existant address should return 400: no created church', async() => {
+    // TODO - needs geocode reimplementation
+    /*test('POST users/create/church with non-existant address should return 400: no created church', async() => {
         const userChurch = _userChurchRegisterData();
         userChurch.church.address = "Fake address!";
         userChurch.church.city = "Fake city!";
@@ -89,14 +95,16 @@ describe('User Endpoints', () => {
 
         const res = await request.post('/users/create/church').send(userChurch);
         expect(res.status).toBe(400);
-    });
+    });*/
     test('POST users/create/church with appropriate values should return a 201: created new Church', async() => {
         const userChurch = _userChurchRegisterData();
         const res = await request.post('/users/create/church').send(userChurch);
             expect(res.status).toBe(201);
-            expect(res.body).toHaveProperty("user");
+            expect(res.body).toHaveProperty("email");
+            expect(res.body).toHaveProperty("aboutMe");
+            expect(res.body).toHaveProperty("church");
 
-        churchUser = res.body.user;
+        churchUser = res.body;
     });
     test('POST /users/create/church with already defined email should return a 400', async() => {
         const userChurch = _userChurchRegisterData();
@@ -122,7 +130,8 @@ describe('User Endpoints', () => {
         // Fields not added to the request should not be edited
         expect(churchUser.church.zipCode).toBe(20500);
     });
-    test('PUT /users/update/user Church with non-existant address should return 400: non-updated church', async() => {
+    // TODO - reimplement geocode address
+    /*test('PUT /users/update/user Church with non-existant address should return 400: non-updated church', async() => {
         const updateData = { 
             address: "678 Nonexistant Street", 
             city: "Nowhere", 
@@ -144,7 +153,7 @@ describe('User Endpoints', () => {
         expect(churchUser.church.address).toBe("1600 Pennsylvania Ave., N.W.");
         expect(churchUser.church.city).toBe("Washington");
         expect(churchUser.church.zipCode).toBe(20500);
-    });
+    });*/
     // #endregion Church
 
     // #region GET requests
@@ -242,13 +251,13 @@ describe('User Endpoints', () => {
     afterAll(async () => {
         // After testing, delete the test User
         await prisma.user.deleteMany({
-            where: { 
-                OR: [{
-                    id: indivUser.id,
-                }, { 
-                    id: churchUser.id
-                }]
-            }
+            where: { OR: [
+                { email: "taken-church-email@mail.com" },
+                { email: "georgie@mail.com" },
+                { email: "taken-email@mail.com" },
+                { email: "washington@mail.com" },
+                { email: "church@mail.com" }
+            ] }
         });
     });
 });

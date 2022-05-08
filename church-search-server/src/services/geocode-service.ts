@@ -17,7 +17,11 @@ enum GeocodeResult {
  */
 const getGeocodeLocation = async (church: any, res: Response): Promise<LatLngLiteral | null> => {
 
-    if(!process.env.GEOCODE_API_KEY)
+    return null;
+
+    //TODO - reimplement (should just require Google Cloud API)
+
+    /*if(!process.env.GEOCODE_API_KEY)
         throw new GeocodeApiKeyNotDefinedError();
 
     const geoRes = await mapsClient.geocode({
@@ -33,7 +37,7 @@ const getGeocodeLocation = async (church: any, res: Response): Promise<LatLngLit
         throw new GeocodeApiError();
  
     const loc = geoRes.data.results[0].geometry.location;
-    return loc;
+    return loc;*/
 }
 
 class GeocodeApiKeyNotDefinedError extends Error { }

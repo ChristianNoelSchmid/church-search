@@ -2,6 +2,7 @@ import { Question, QuizTemplate, Role } from '@prisma/client';
 import supertest from 'supertest';
 import { app } from '../app';
 import { prisma } from '../client';
+import { sleep } from '../models';
 
 let request = supertest(app);
 let quizTemplates: QuizTemplate[] = []
@@ -35,10 +36,13 @@ describe('Admin Endpoints', () => {
         let res = await request.post('/admin/template/create')
             .set("Authorization", "bearer " + authToken);
         expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty('quizTemplate');
-        quizTemplates.push(res.body.quizTemplate);
+        expect(res.body).toHaveProperty('createdOn');
+        expect(res.body).toHaveProperty('id');
+        expect(res.body).toHaveProperty('qToTemp');
+        quizTemplates.push(res.body);
     });
     test('POST /admin/question/create creates a new Question', async() => {
+        await sleep(1000);
         let res = await request.post('/admin/question/create')
             .set("Authorization", "bearer " + authToken).send({ 
                 text: "What kind of bear is best?",
@@ -47,9 +51,10 @@ describe('Admin Endpoints', () => {
             });
 
         expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty('question');
+        expect(res.body).toHaveProperty('id');
+        expect(res.body).toHaveProperty('choices');
 
-        questions.push(res.body.question);
+        questions.push(res.body);
         
         res = await request.post('/admin/question/create')
             .set("Authorization", "bearer " + authToken).send({ 
@@ -58,7 +63,7 @@ describe('Admin Endpoints', () => {
                 templateId: quizTemplates[0].id,
             });
 
-        questions.push(res.body.question);
+        questions.push(res.body);
 
         res = await request.post('/admin/question/create')
             .set("Authorization", "bearer " + authToken).send({ 
@@ -67,7 +72,7 @@ describe('Admin Endpoints', () => {
                 templateId: quizTemplates[0].id,
             });
 
-        questions.push(res.body.question);
+        questions.push(res.body);
         const template = await prisma.quizTemplate.findFirst({
             where: { id: quizTemplates[0].id, },
             include: { qToTemp: true, },
@@ -81,8 +86,10 @@ describe('Admin Endpoints', () => {
             .send({ templateId: quizTemplates[0].id });
 
         expect(res.status).toBe(201);
-        expect(res.body).toHaveProperty("quizTemplate");
-        const newTemplateId = res.body.quizTemplate.id;
+        expect(res.body).toHaveProperty("id");
+        expect(res.body).toHaveProperty("createdOn");
+        expect(res.body).toHaveProperty("qToTemp");
+        const newTemplateId = res.body.id;
         expect(newTemplateId).not.toBe(quizTemplates[0].id);
 
         // Expect the new QuizTemplate to have all references to the 
@@ -94,14 +101,14 @@ describe('Admin Endpoints', () => {
             });
             expect(question!.qToTemp.some(qtt => qtt.templateId == newTemplateId)).toBeTruthy();
         });
-        quizTemplates.push(res.body.quizTemplate);
+        quizTemplates.push(res.body);
     });
     test('POST /admin/question/duplicate duplicates a Question', async () => {
         let res = await request.post('/admin/question/duplicate')
             .set("Authorization", "bearer " + authToken)
             .send({ questionId: questions[0].id });
 
-        questions.push(res.body.question);
+        questions.push(res.body);
         expect(questions[0].id).not.toBe(questions[questions.length - 1].id);
         expect(questions[0].text).toBe(questions[questions.length - 1].text);
         expect(questions[0].choices).toBe(questions[questions.length - 1].choices);
@@ -155,7 +162,6 @@ describe('Admin Endpoints', () => {
             where: { questionId: questions[2].id, templateId: quizTemplates[0].id }
         }))?.qIndex).toBe(2);  
 
-
         await request.put('/admin/question/associate')
             .set("Authorization", "bearer " + authToken)
             .send({ questionId: questions[0].id, templateId: quizTemplates[1].id, qIndex: 0 });
@@ -173,8 +179,6 @@ describe('Admin Endpoints', () => {
             where: { questionId: questions[2].id, templateId: quizTemplates[1].id }
         }))?.qIndex).toBe(3);  
     });
-
-    test('')
 
     afterAll(async () => {
         await prisma.user.delete({ where: { email: "chris@mail.com" } });
