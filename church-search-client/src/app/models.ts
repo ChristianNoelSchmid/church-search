@@ -4,6 +4,11 @@ enum UserType {
     Church = "Church",
 }
 
+enum Role {
+    Admin,
+    User
+}
+
 type Individual = {
     firstName: string,
     lastName: string,
@@ -22,9 +27,10 @@ type User = {
     email: string,
     aboutMe: string, 
     userType: UserType,
+    userRole: Role,
 
-    church: Church | undefined;
-    indiv: Individual | undefined;
+    church: Church | undefined,
+    indiv: Individual | undefined
 };
 
 type UserAndAccessToken = User & {
